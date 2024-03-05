@@ -34,6 +34,7 @@ namespace GameSystem.Resources
 
                 ResourcesViewItem viewItem = Instantiate(viewPrefab, group.transform);
                 viewItem.Inititalization(resourcesInfo.ElementAt(i).Key.ResourceSprite, resourceType.ToString(), resourcesInfo.ElementAt(i).Value);
+                revourcesView.Add(resourceType, viewItem);
             }
 
             manager.OnResourcesChanged += OnResourceChanged;
@@ -41,6 +42,8 @@ namespace GameSystem.Resources
 
         private void OnResourceChanged(ResourceType resourceType, int value)
         {
+            //Debug.Log($"Resource Changed {resourceType} | {value}");
+            
             if (!revourcesView.ContainsKey(resourceType)) return;
             revourcesView[resourceType].SetAmountValue(value);
         }

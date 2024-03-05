@@ -46,6 +46,7 @@ namespace GameSystem.Resources
         {
             if (Instance == null) return;
 
+            Debug.Log($"Add Resource {resourcesType} | {value}");
             value = Mathf.Clamp(value, 0, int.MaxValue);
             if (value <= 0) return;
 
