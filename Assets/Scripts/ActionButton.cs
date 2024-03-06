@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using GameSystem.Resources;
 
 [RequireComponent(typeof(Button))]
-public class TestButton : MonoBehaviour
+public class ActionButton : MonoBehaviour
 {
     private Button actionButton;
 
@@ -20,6 +20,7 @@ public class TestButton : MonoBehaviour
 
     private void OnActionButtonClick()
     {
-        ResourcesManager.AddResource(resourcesType, resourceValue);
+        if (ResourcesManager.Instance != null)
+            ResourcesManager.Instance.AddResource(resourcesType, resourceValue);
     }
 }

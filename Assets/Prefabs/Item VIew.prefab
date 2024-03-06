@@ -52,8 +52,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24df53dce9c228746bffcd388ea03921, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  recourceAmountText: {fileID: 1520604558935689629}
-  recourceNameText: {fileID: 8518542718303479645}
+  resourceAmountText: {fileID: 1520604558935689629}
+  resourceNameText: {fileID: 8518542718303479645}
   resourceIcon: {fileID: 2003676548185105060}
 --- !u!1 &1806589457087130838
 GameObject:

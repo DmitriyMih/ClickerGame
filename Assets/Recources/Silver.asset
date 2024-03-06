@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Silver
   m_EditorClassIdentifier: 
   <ResourcesType>k__BackingField: 0
-  <ResourcesAmount>k__BackingField: 0
+  <MaxResourcesAmount>k__BackingField: 1000
   ResourceSprite: {fileID: 21300000, guid: 2321461f704ac884eba41458567825bf, type: 3}

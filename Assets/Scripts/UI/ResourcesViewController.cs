@@ -3,47 +3,54 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Assertions;
 
 namespace GameSystem.Resources
 {
     public class ResourcesViewController : MonoBehaviour
     {
+        [SerializeField] private ResourcesManager resourcesManager;
+
         [SerializeField] private GridLayoutGroup group;
         [SerializeField] private ResourcesViewItem viewPrefab;
 
         private Dictionary<ResourceType, ResourcesViewItem> revourcesView = new();
 
-        public void Inititalization(ResourcesManager manager, Dictionary<ResourceItemInfo, int> resourcesInfo)
+        private void Awake()
         {
-            if (manager == null) return;
+            Assert.IsNotNull(group);
+            Assert.IsNotNull(viewPrefab);
+            Assert.IsNotNull(resourcesManager);
+        }
 
-            if (viewPrefab == null)
-            {
-                Debug.LogError($"View Prefab {gameObject} Is Null");
-                return;
-            }
+        private void Start()
+        {
+            Inititalization();
 
-            for (int i = 0; i < resourcesInfo.Count; i++)
+            resourcesManager.OnResourcesChanged += OnResourceChanged;
+        }
+
+        private void OnDestroy()
+        {
+            resourcesManager.OnResourcesChanged -= OnResourceChanged;
+        }
+
+        private void Inititalization()
+        {
+            for (int i = 0; i < resourcesManager.StoredResourcesInfo.Count; i++)
             {
-                ResourceType resourceType = resourcesInfo.ElementAt(i).Key.ResourcesType;
-                if (revourcesView.ContainsKey(resourceType))
-                {
-                    Debug.LogError($"Resources {resourceType} Is Already Initialized In Dictionary");
-                    continue;
-                }
+                ResourceItemInfo resourceInfo = resourcesManager.StoredResourcesInfo.ElementAt(i).Value;
+                ResourceType resourceType = resourceInfo.ResourcesType;
 
                 ResourcesViewItem viewItem = Instantiate(viewPrefab, group.transform);
-                viewItem.Inititalization(resourcesInfo.ElementAt(i).Key.ResourceSprite, resourceType.ToString(), resourcesInfo.ElementAt(i).Value);
+                viewItem.Inititalization(resourceInfo.ResourceSprite, resourceType.ToString(), resourcesManager.StoredResources[resourceType]);
+             
                 revourcesView.Add(resourceType, viewItem);
             }
-
-            manager.OnResourcesChanged += OnResourceChanged;
         }
 
         private void OnResourceChanged(ResourceType resourceType, int value)
         {
-            //Debug.Log($"Resource Changed {resourceType} | {value}");
-            
             if (!revourcesView.ContainsKey(resourceType)) return;
             revourcesView[resourceType].SetAmountValue(value);
         }

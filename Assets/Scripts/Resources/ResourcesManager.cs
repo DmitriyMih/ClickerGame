@@ -7,10 +7,12 @@ namespace GameSystem.Resources
 {
     public class ResourcesManager : Singleton<ResourcesManager>
     {
-        [SerializeField] private List<ResourceItemInfo> resourcesInfo = new();
+        [SerializeField] private List<ResourceItemInfo> availableResourcesInfo = new();
         [SerializeField] private ResourcesViewController resourcesView;
 
-        public Dictionary<ResourceType, int> ResourceInfoDictionary { get; private set; } = new();
+        public Dictionary<ResourceType, ResourceItemInfo> StoredResourcesInfo { get; private set; } = new();
+        public Dictionary<ResourceType, int> StoredResources { get; private set; } = new();
+
         public event Action<ResourceType, int> OnResourcesChanged;
 
         protected override void Awake()
@@ -21,39 +23,37 @@ namespace GameSystem.Resources
 
         private void Inititalization()
         {
-            Dictionary<ResourceItemInfo, int> recourcesTempInfo = new();
-
-            for (int i = 0; i < resourcesInfo.Count; i++)
+            for (int i = 0; i < availableResourcesInfo.Count; i++)
             {
-                ResourceType resourcesType = resourcesInfo[i].ResourcesType;
-                if (ResourceInfoDictionary.ContainsKey(resourcesType))
+                ResourceType resourcesType = availableResourcesInfo[i].ResourcesType;
+                if (StoredResources.ContainsKey(resourcesType))
                 {
                     Debug.LogError($"Resources {resourcesType} Is Already Initialized In Dictionary");
                     continue;
                 }
 
-                int resourceValue = RecourcesSave.LoadResource(resourcesInfo[i].ResourcesType);
-                ResourceInfoDictionary.Add(resourcesType, resourceValue);
+                int resourceValue = RecourcesSave.LoadResource(availableResourcesInfo[i].ResourcesType);
 
-                recourcesTempInfo.Add(resourcesInfo[i], resourceValue);
+                StoredResources.Add(resourcesType, resourceValue);
+                StoredResourcesInfo.Add(resourcesType, availableResourcesInfo[i]);
             }
-
-            if (resourcesView != null)
-                resourcesView.Inititalization(this, recourcesTempInfo);
         }
 
-        public static void AddResource(ResourceType resourcesType, int value)
+        public void AddResource(ResourceType resourcesType, int value)
         {
-            if (Instance == null) return;
+            if (!StoredResources.ContainsKey(resourcesType))
+            {
+                Debug.LogError($"Resources {resourcesType} Not Available");
+                return;
+            }
+            //Debug.Log($"Add Resource {resourcesType} | {value}");
 
-            Debug.Log($"Add Resource {resourcesType} | {value}");
             value = Mathf.Clamp(value, 0, int.MaxValue);
-            if (value <= 0) return;
+            StoredResources[resourcesType] = Mathf.Clamp(StoredResources[resourcesType] + value, 0, int.MaxValue);
 
-            Instance.ResourceInfoDictionary[resourcesType] += value;
-            Instance.OnResourcesChanged?.Invoke(resourcesType, Instance.ResourceInfoDictionary[resourcesType]);
+            OnResourcesChanged?.Invoke(resourcesType, StoredResources[resourcesType]);
 
-            RecourcesSave.SaveResource(resourcesType, Instance.ResourceInfoDictionary[resourcesType]);
+            RecourcesSave.SaveResource(resourcesType, StoredResources[resourcesType]);
         }
     }
 }

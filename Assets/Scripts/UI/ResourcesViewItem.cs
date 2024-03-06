@@ -2,36 +2,37 @@
 using UnityEngine.UI;
 using TMPro;
 using System;
+using UnityEngine.Assertions;
 
 namespace GameSystem.Resources
 {
-    public class ResourcesViewItem: MonoBehaviour
+    public class ResourcesViewItem : MonoBehaviour
     {
-        [SerializeField] private TextMeshProUGUI recourceAmountText;
-        [SerializeField] private TextMeshProUGUI recourceNameText;
+        [SerializeField] private TextMeshProUGUI resourceAmountText;
+        [SerializeField] private TextMeshProUGUI resourceNameText;
 
         [SerializeField] private Image resourceIcon;
 
+        private void Awake()
+        {
+            Assert.IsNotNull(resourceIcon);
+
+            Assert.IsNotNull(resourceNameText);
+            Assert.IsNotNull(resourceAmountText);
+        }
+
         public void Inititalization(Sprite recourceSprite, string recourceName, int value)
         {
-            if (resourceIcon !=null)
-                resourceIcon.sprite = recourceSprite;
 
-            if (recourceNameText != null)
-                recourceNameText.text = recourceName;
+            resourceIcon.sprite = recourceSprite;
+            resourceNameText.text = recourceName;
 
             SetAmountValue(value);
         }
 
         public void SetAmountValue(int value)
         {
-            if(recourceAmountText==null)
-            {
-                Debug.LogError($"Recource Text {gameObject} | Is Null");
-                return;
-            }
-
-            recourceAmountText.text = value.ToString();
+            resourceAmountText.text = value.ToString();
         }
     }
 }
