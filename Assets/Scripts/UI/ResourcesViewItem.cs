@@ -23,7 +23,6 @@ namespace GameSystem.Resources
 
         public void Inititalization(Sprite recourceSprite, string recourceName, int value)
         {
-
             resourceIcon.sprite = recourceSprite;
             resourceNameText.text = recourceName;
 

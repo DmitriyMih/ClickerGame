@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-namespace GameSystem.Resources
+namespace GameSystem.Resources.UI
 {
     public class ResourcesViewController : MonoBehaviour
     {

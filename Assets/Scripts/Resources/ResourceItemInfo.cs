@@ -11,5 +11,8 @@ namespace GameSystem.Resources
 
         [field: Header("Item View")]
         [field: SerializeField] public Sprite ResourceSprite;
+
+        [field: Header("Generation Settings")]
+        [field: SerializeField] public float GenerationTime = 1f;
     } 
 }

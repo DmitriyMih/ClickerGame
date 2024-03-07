@@ -7,6 +7,7 @@ namespace GameSystem.Resources
     public enum ResourceType
     {
         Silver,
-        Gold
+        Gold,
+        Bronze
     }
 }

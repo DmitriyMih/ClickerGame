@@ -36,6 +36,7 @@ namespace GameSystem.Resources
 
                 StoredResources.Add(resourcesType, resourceValue);
                 StoredResourcesInfo.Add(resourcesType, availableResourcesInfo[i]);
+                OnResourcesChanged?.Invoke(resourcesType, resourceValue);
             }
         }
 
