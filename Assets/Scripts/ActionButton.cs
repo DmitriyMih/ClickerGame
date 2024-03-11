@@ -4,23 +4,26 @@ using UnityEngine;
 using UnityEngine.UI;
 using GameSystem.Resources;
 
-[RequireComponent(typeof(Button))]
-public class ActionButton : MonoBehaviour
+namespace GameSystem.Resources.Example
 {
-    private Button actionButton;
-
-    [SerializeField] private ResourceType resourcesType;
-    [SerializeField] private int resourceValue;
-
-    private void Awake()
+    [RequireComponent(typeof(Button))]
+    public class ActionButton : MonoBehaviour
     {
-        actionButton = GetComponent<Button>();
-        actionButton.onClick.AddListener(() => OnActionButtonClick());
-    }
+        private Button actionButton;
 
-    private void OnActionButtonClick()
-    {
-        if (ResourcesManager.Instance != null)
-            ResourcesManager.Instance.AddResource(resourcesType, resourceValue);
+        [SerializeField] private ResourceType resourcesType;
+        [SerializeField] private int resourceValue;
+
+        private void Awake()
+        {
+            actionButton = GetComponent<Button>();
+            actionButton.onClick.AddListener(() => OnActionButtonClick());
+        }
+
+        private void OnActionButtonClick()
+        {
+            if (ResourcesManager.Instance != null)
+                ResourcesManager.Instance.AddResource(resourcesType, resourceValue);
+        }
     }
 }

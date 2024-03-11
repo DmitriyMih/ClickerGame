@@ -21,13 +21,14 @@ namespace GameSystem.Resources.UI
             Assert.IsNotNull(group);
             Assert.IsNotNull(viewPrefab);
             Assert.IsNotNull(resourcesManager);
+
+            resourcesManager.OnResourcesChanged += OnResourceChanged;
         }
 
         private void Start()
         {
             Inititalization();
 
-            resourcesManager.OnResourcesChanged += OnResourceChanged;
         }
 
         private void OnDestroy()
@@ -44,7 +45,7 @@ namespace GameSystem.Resources.UI
 
                 ResourcesViewItem viewItem = Instantiate(viewPrefab, group.transform);
                 viewItem.Inititalization(resourceInfo.ResourceSprite, resourceType.ToString(), resourcesManager.StoredResources[resourceType]);
-             
+
                 revourcesView.Add(resourceType, viewItem);
             }
         }

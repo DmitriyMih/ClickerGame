@@ -8,8 +8,6 @@ namespace GameSystem.Resources
     public class ResourcesManager : Singleton<ResourcesManager>
     {
         [SerializeField] private List<ResourceItemInfo> availableResourcesInfo = new();
-        [SerializeField] private ResourcesViewController resourcesView;
-
         public Dictionary<ResourceType, ResourceItemInfo> StoredResourcesInfo { get; private set; } = new();
         public Dictionary<ResourceType, int> StoredResources { get; private set; } = new();
 
@@ -32,7 +30,7 @@ namespace GameSystem.Resources
                     continue;
                 }
 
-                int resourceValue = RecourcesSave.LoadResource(availableResourcesInfo[i].ResourcesType);
+                int resourceValue = ResourcesSave.LoadResource(availableResourcesInfo[i].ResourcesType);
 
                 StoredResources.Add(resourcesType, resourceValue);
                 StoredResourcesInfo.Add(resourcesType, availableResourcesInfo[i]);
@@ -54,7 +52,7 @@ namespace GameSystem.Resources
 
             OnResourcesChanged?.Invoke(resourcesType, StoredResources[resourcesType]);
 
-            RecourcesSave.SaveResource(resourcesType, StoredResources[resourcesType]);
+            ResourcesSave.SaveResource(resourcesType, StoredResources[resourcesType]);
         }
     }
 }

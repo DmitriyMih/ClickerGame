@@ -23,11 +23,21 @@ namespace GameSystem.Resources
             for (int i = 0; i < resourcesManager.StoredResourcesInfo.Count; i++)
             {
                 ResourceItemInfo resourceInfo = resourcesManager.StoredResourcesInfo.ElementAt(i).Value;
-                ResourcesGenerationInfo.Add(resourceInfo.ResourcesType, 1);
-
-                Coroutine coroutine = StartCoroutine(ResourceGeneration(resourceInfo.ResourcesType, resourceInfo.GenerationTime));
-                coroutineDictionary.Add(resourceInfo.ResourcesType, coroutine);
+                ResourcesGenerationInfo.Add(resourceInfo.ResourcesType, ResourceGenerationSave.LoadGenerationValue(resourceInfo.ResourcesType, 1));
+                SetGenerationState(resourceInfo.ResourcesType, ResourcesGenerationInfo[resourceInfo.ResourcesType] > 0, resourceInfo.GenerationTime);
             }
+        }
+
+        private void SetGenerationState(ResourceType resourceType, bool state, float generationTime)
+        {
+            if (coroutineDictionary.ContainsKey(resourceType))
+                StopCoroutine(coroutineDictionary[resourceType]);
+
+            if (!state)
+                return;
+
+            Coroutine coroutine = StartCoroutine(ResourceGeneration(resourceType, generationTime));
+            coroutineDictionary.Add(resourceType, coroutine);
         }
 
         public void AddGeneratedResourceValue(ResourceType resourceType, int value)
