@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using UnityEngine.Assertions;
+using TMPro;
 
 namespace SimpleResourcesSystem.Example
 {
@@ -12,7 +12,7 @@ namespace SimpleResourcesSystem.Example
 
         [SerializeField] private Image resourceIcon;
 
-        private void Awake()
+        protected virtual void Awake()
         {
             Assert.IsNotNull(resourceIcon);
 

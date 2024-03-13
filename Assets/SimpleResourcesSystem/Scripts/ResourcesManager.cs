@@ -10,12 +10,6 @@ namespace SimpleResourcesSystem
         Failed
     }
 
-    public enum ActionType
-    {
-        Add,
-        Remove
-    }
-
     public class ResourcesManager: MonoBehaviour 
     {
         [SerializeField] private List<ResourceInfo> availableResourcesInfo = new();

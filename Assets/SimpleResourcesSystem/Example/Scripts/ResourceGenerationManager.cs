@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,15 @@ namespace SimpleResourcesSystem.Example
     public class ResourceGenerationManager : MonoBehaviour
     {
         private ResourcesManager resourcesManager;
-        public Dictionary<string, int> ResourcesGenerationInfo { get; private set; } = new();
+
+        [Space(), Header("Debug Settings")]
+        [SerializeField] private bool showOutput;
+
+        public Dictionary<string, ResourceGenerationInfo> ResourcesGenerationInfo { get; private set; } = new();
+        public Dictionary<string, int> StoredResourcesGeneration { get; private set; } = new();
         private Dictionary<string, Coroutine> coroutineDictionary = new();
+
+        public event Action<ResourceGenerationInfo, int, float> OnGenerationChanged;
 
         private void Awake()
         {
@@ -19,35 +27,70 @@ namespace SimpleResourcesSystem.Example
 
         private void Start()
         {
+            Inititalization();
+        }
+
+        private async void Inititalization()
+        {
             for (int i = 0; i < resourcesManager.StoredResourcesInfo.Count; i++)
             {
+                Debug.Log(resourcesManager.StoredResourcesInfo.ElementAt(i).Value as ResourceGenerationInfo);
                 if (resourcesManager.StoredResourcesInfo.ElementAt(i).Value is ResourceGenerationInfo resourceInfo)
                 {
-                    ResourcesGenerationInfo.Add(resourceInfo.ResourcesKey, ResourceGenerationSave.LoadGenerationValue(resourceInfo.ResourcesKey, 1));
-                    SetGenerationState(resourceInfo.ResourcesKey, ResourcesGenerationInfo[resourceInfo.ResourcesKey] > 0, resourceInfo.GenerationTime);
+                    ResourcesGenerationInfo.Add(resourceInfo.ResourcesKey, resourceInfo);
+                    StoredResourcesGeneration.Add(resourceInfo.ResourcesKey, ResourceGenerationSave.LoadGenerationValue(resourceInfo.ResourcesKey, 1));
+                    SetGenerationState(resourceInfo.ResourcesKey, StoredResourcesGeneration[resourceInfo.ResourcesKey] > 0, resourceInfo.GenerationTime);
+
+                    await System.Threading.Tasks.Task.Delay(1);
+                    OnGenerationChanged?.Invoke(resourceInfo, StoredResourcesGeneration[resourceInfo.ResourcesKey], resourceInfo.GenerationTime);
                 }
             }
         }
 
-        private void SetGenerationState(string resourceKey, bool state, float generationTime)
+        private void SetGenerationState(string generationKey, bool state, float generationTime)
         {
-            if (coroutineDictionary.ContainsKey(resourceKey))
-                StopCoroutine(coroutineDictionary[resourceKey]);
+            Debug.Log($"Set {generationKey} | {state}");
+            if (coroutineDictionary.ContainsKey(generationKey))
+                StopCoroutine(coroutineDictionary[generationKey]);
 
             if (!state)
                 return;
 
-            Coroutine coroutine = StartCoroutine(ResourceGeneration(resourceKey, generationTime));
-            coroutineDictionary.Add(resourceKey, coroutine);
+            Coroutine coroutine = StartCoroutine(ResourceGeneration(generationKey, generationTime));
+            coroutineDictionary.Add(generationKey, coroutine);
         }
 
-        public void AddGeneratedResourceValue(string resourceInfo, int value)
+        public bool HasGenerationAmount(string generationKey, int value)
         {
-            if (!ResourcesGenerationInfo.ContainsKey(resourceInfo))
+            if (!StoredResourcesGeneration.ContainsKey(generationKey))
+            {
+                OutputInfo($"Resources {generationKey} Not Available");
+                return false;
+            }
+
+            return StoredResourcesGeneration[generationKey] - value >= 0;
+        }
+
+        public void SetResourceGeneration(string generationKey, int value, ActionType actionType)
+        {
+            if (!StoredResourcesGeneration.ContainsKey(generationKey))
+            {
+                OutputInfo($"Resources {generationKey} Not Available");
+                return;
+            }
+
+            if (actionType == ActionType.Remove && !HasGenerationAmount(generationKey, value))
                 return;
 
-            value = Mathf.Clamp(value, 0, int.MaxValue);
-            ResourcesGenerationInfo[resourceInfo] = Mathf.Clamp(ResourcesGenerationInfo[resourceInfo] + value, 0, int.MaxValue);
+            int newResourceValue = Mathf.Clamp(StoredResourcesGeneration[generationKey] + value * (actionType == ActionType.Add ? 1 : -1), 0, int.MaxValue);
+            OutputInfo($"Set Resource {generationKey} | {newResourceValue}");
+
+            StoredResourcesGeneration[generationKey] = newResourceValue;
+            ResourceGenerationInfo generationInfo = ResourcesGenerationInfo[generationKey];
+
+            OnGenerationChanged?.Invoke(generationInfo, newResourceValue, generationInfo.GenerationTime);
+
+            ResourceGenerationSave.SaveGeneration(generationKey, newResourceValue);
         }
 
         private IEnumerator ResourceGeneration(string resourceInfo, float generationTime)
@@ -58,9 +101,15 @@ namespace SimpleResourcesSystem.Example
             {
                 yield return wait;
 
-                int resourceValue = ResourcesGenerationInfo[resourceInfo];
+                int resourceValue = StoredResourcesGeneration[resourceInfo];
                 resourcesManager.SetResource(resourceInfo, resourceValue, ActionType.Add);
             }
+        }
+
+        private void OutputInfo(string newOutput)
+        {
+            if (!showOutput) return;
+            Debug.Log(newOutput);
         }
     }
 }

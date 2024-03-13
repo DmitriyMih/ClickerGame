@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <ResourcesKey>k__BackingField: Bronze
   <ResourceSprite>k__BackingField: {fileID: 21300000, guid: b9f2793e71a325048b0939840f9c86ff, type: 3}
-  <GenerationTime>k__BackingField: 1
+  <GenerationTime>k__BackingField: 5

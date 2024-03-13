@@ -9,31 +9,43 @@ namespace SimpleResourcesSystem.Example
 {
     public class ResourcesViewController : MonoBehaviour
     {
-        [SerializeField] private ResourcesManager resourcesManager;
-
         [SerializeField] private GridLayoutGroup group;
-        [SerializeField] private ResourcesViewItem viewPrefab;
+
+        [Space]
+        [SerializeField] private ResourcesManager resourcesManager;
+        [SerializeField] private ResourcesViewItem resourceViewPrefab;
+
+        [Space]
+        [SerializeField] private ResourceGenerationManager generationManager;
+        [SerializeField] private GenerationViewItem generationViewPrefab;
 
         private Dictionary<string, ResourcesViewItem> revourcesView = new();
+        private Dictionary<string, GenerationViewItem> generationView = new();
 
         private void Awake()
         {
             Assert.IsNotNull(group);
-            Assert.IsNotNull(viewPrefab);
             Assert.IsNotNull(resourcesManager);
+            Assert.IsNotNull(resourceViewPrefab);
 
             resourcesManager.OnResourcesChanged += OnResourceChanged;
+            if (generationManager != null)
+            {
+                Assert.IsNotNull(generationViewPrefab);
+                generationManager.OnGenerationChanged += OnGenerationChanged;
+            }
         }
 
         private void Start()
         {
             Inititalization();
-
         }
 
         private void OnDestroy()
         {
             resourcesManager.OnResourcesChanged -= OnResourceChanged;
+            if (generationManager != null)
+                generationManager.OnGenerationChanged -= OnGenerationChanged;
         }
 
         private void Inititalization()
@@ -42,11 +54,24 @@ namespace SimpleResourcesSystem.Example
             {
                 ResourceInfo resourceInfo = resourcesManager.StoredResourcesInfo.ElementAt(i).Value;
 
-                ResourcesViewItem viewItem = Instantiate(viewPrefab, group.transform);
-                viewItem.Inititalization(resourceInfo.ResourceSprite, resourceInfo.ResourcesKey.ToString(), resourcesManager.StoredResources[resourceInfo.ResourcesKey]);
+                ResourcesViewItem viewItem;
+                if (resourcesManager.StoredResourcesInfo.ElementAt(i).Value is ResourceGenerationInfo generationInfo)
+                {
+                    viewItem = Instantiate(generationViewPrefab, group.transform);
+                    generationView.Add(resourceInfo.ResourcesKey, (GenerationViewItem)viewItem);
+                }
+                else
+                    viewItem = Instantiate(resourceViewPrefab, group.transform);
 
                 revourcesView.Add(resourceInfo.ResourcesKey, viewItem);
+                viewItem.Inititalization(resourceInfo.ResourceSprite, resourceInfo.ResourcesKey.ToString(), resourcesManager.StoredResources[resourceInfo.ResourcesKey]);
             }
+        }
+
+        private void OnGenerationChanged(ResourceGenerationInfo generationInfo, int value, float time)
+        {
+            if (!generationView.ContainsKey(generationInfo.ResourcesKey)) return;
+            generationView[generationInfo.ResourcesKey].SetGenerationAmountValue(value, time);
         }
 
         private void OnResourceChanged(ResourceInfo resourceInfo, int value)
