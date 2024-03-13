@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -7,7 +6,7 @@ using UnityEngine.Assertions;
 
 namespace SimpleResourcesSystem.Example
 {
-    public class ResourcesViewController : MonoBehaviour
+    public class MultipleViewController : MonoBehaviour
     {
         [SerializeField] private GridLayoutGroup group;
 
