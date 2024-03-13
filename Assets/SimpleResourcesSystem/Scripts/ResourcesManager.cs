@@ -16,17 +16,17 @@ namespace SimpleResourcesSystem
         Remove
     }
 
-    public class ResourcesManager : MonoBehaviour
+    public class ResourcesManager: MonoBehaviour 
     {
-        [SerializeField] private List<ResourceItemInfo> availableResourcesInfo = new();
+        [SerializeField] private List<ResourceInfo> availableResourcesInfo = new();
 
         [Space(), Header("Debug Settings")]
         [SerializeField] private bool showOutput;
 
-        public Dictionary<ResourceType, ResourceItemInfo> StoredResourcesInfo { get; private set; } = new();
-        public Dictionary<ResourceType, int> StoredResources { get; private set; } = new();
+        public Dictionary<string, ResourceInfo> StoredResourcesInfo { get; private set; } = new();
+        public Dictionary<string, int> StoredResources { get; private set; } = new();
 
-        public event Action<ResourceType, int> OnResourcesChanged;
+        public event Action<ResourceInfo, int> OnResourcesChanged;
 
         private void Awake()
         {
@@ -37,54 +37,54 @@ namespace SimpleResourcesSystem
         {
             for (int i = 0; i < availableResourcesInfo.Count; i++)
             {
-                ResourceType resourcesType = availableResourcesInfo[i].ResourcesType;
-                if (StoredResources.ContainsKey(resourcesType))
+                ResourceInfo resourceInfo = availableResourcesInfo[i];
+                if (StoredResources.ContainsKey(resourceInfo.ResourcesKey))
                 {
-                    OutputInfo($"Resources {resourcesType} Is Already Initialized In Dictionary");
+                    OutputInfo($"Resources {resourceInfo} Is Already Initialized In Dictionary");
                     continue;
                 }
 
-                int resourceValue = ResourcesSave.LoadResource(availableResourcesInfo[i].ResourcesType);
+                int resourceValue = ResourcesSave.LoadResource(availableResourcesInfo[i].ResourcesKey);
 
-                StoredResources.Add(resourcesType, resourceValue);
-                StoredResourcesInfo.Add(resourcesType, availableResourcesInfo[i]);
-                OnResourcesChanged?.Invoke(resourcesType, resourceValue);
+                StoredResources.Add(resourceInfo.ResourcesKey, resourceValue);
+                StoredResourcesInfo.Add(resourceInfo.ResourcesKey, availableResourcesInfo[i]);
+                OnResourcesChanged?.Invoke(resourceInfo, resourceValue);
             }
         }
 
-        public bool HasResourcesAmount(ResourceType resourcesType, int value)
+        public bool HasResourcesAmount(string resourceKey, int value)
         {
-            if (!StoredResources.ContainsKey(resourcesType))
+            if (!StoredResources.ContainsKey(resourceKey))
             {
-                OutputInfo($"Resources {resourcesType} Not Available");
+                OutputInfo($"Resources {resourceKey} Not Available");
                 return false;
             }
 
-            return StoredResources[resourcesType] - value >= 0;
+            return StoredResources[resourceKey] - value >= 0;
         }
 
-        public void SetResource(ResourceType resourcesType, int value, ActionType actionType, Action<StatusState> action = null)
+        public void SetResource(string resourceKey, int value, ActionType actionType, Action<StatusState> action = null) 
         {
-            if (!StoredResources.ContainsKey(resourcesType))
+            if (!StoredResources.ContainsKey(resourceKey))
             {
-                OutputInfo($"Resources {resourcesType} Not Available");
+                OutputInfo($"Resources {resourceKey} Not Available");
                 action?.Invoke(StatusState.Failed);
                 return;
             }
 
-            if (actionType == ActionType.Remove && !HasResourcesAmount(resourcesType, value))
+            if (actionType == ActionType.Remove && !HasResourcesAmount(resourceKey, value))
             {
                 action?.Invoke(StatusState.Failed);
                 return;
             }
 
-            int newResourceValue = Mathf.Clamp(StoredResources[resourcesType] + value * (actionType == ActionType.Add ? 1 : -1), 0, int.MaxValue);
-            OutputInfo($"Set Resource {resourcesType} | {newResourceValue}");
+            int newResourceValue = Mathf.Clamp(StoredResources[resourceKey] + value * (actionType == ActionType.Add ? 1 : -1), 0, int.MaxValue);
+            OutputInfo($"Set Resource {resourceKey} | {newResourceValue}");
 
-            StoredResources[resourcesType] = newResourceValue;
-            OnResourcesChanged?.Invoke(resourcesType, newResourceValue);
+            StoredResources[resourceKey] = newResourceValue;
+            OnResourcesChanged?.Invoke(StoredResourcesInfo[resourceKey], newResourceValue);
 
-            ResourcesSave.SaveResource(resourcesType, newResourceValue);
+            ResourcesSave.SaveResource(resourceKey, newResourceValue);
             action?.Invoke(StatusState.Success);
         }
 

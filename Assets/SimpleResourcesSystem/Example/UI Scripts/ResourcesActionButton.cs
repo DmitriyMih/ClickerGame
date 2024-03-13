@@ -13,12 +13,13 @@ namespace SimpleResourcesSystem.Example
         [Space]
         [SerializeField] private ActionType actionType;
 
-        [SerializeField] private ResourceType resourcesType;
+        [SerializeField] private ResourceInfo resourcesInfo;
         [SerializeField] private int resourceValue;
 
         private void Awake()
         {
             Assert.IsNotNull(resourcesManager);
+            Assert.IsNotNull(resourcesInfo);
 
             actionButton = GetComponent<Button>();
             actionButton.onClick.AddListener(() => OnActionButtonClick());
@@ -26,7 +27,7 @@ namespace SimpleResourcesSystem.Example
 
         private void OnActionButtonClick()
         {
-            resourcesManager.SetResource(resourcesType, resourceValue, actionType);
+            resourcesManager.SetResource(resourcesInfo.ResourcesKey, resourceValue, actionType);
         }
     }
 }

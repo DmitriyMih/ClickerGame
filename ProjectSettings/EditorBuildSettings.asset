@@ -5,10 +5,10 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
+  - enabled: 1
     path: Assets/SimpleResourcesSystem/Example/Scenes/Example Scene 1.unity
-    guid: 54a44a3ced7f1c340aa0389b8b11ccbc
-  - enabled: 0
+    guid: 1d5b93551d34f15458e9699582084726
+  - enabled: 1
     path: Assets/SimpleResourcesSystem/Example/Scenes/Example Scene 2.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
   m_configObjects:

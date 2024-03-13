@@ -6,17 +6,17 @@ namespace SimpleResourcesSystem.Example
     {
         private const string generationKey = "GenerationAmount";
 
-        public static int LoadGenerationValue(ResourceType resourcesType, int defaultValue = 0)
+        public static int LoadGenerationValue(string resourceKey, int defaultValue = 0)
         {
             int sceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
-            return PlayerPrefs.GetInt($"{resourcesType}{sceneIndex}{generationKey}", defaultValue);
+            return PlayerPrefs.GetInt($"{resourceKey}{sceneIndex}{generationKey}", defaultValue);
         }
 
-        public static void SaveGeneration(ResourceType resourcesType, int resourceValue)
+        public static void SaveGeneration(string resourceKey, int resourceValue)
         {
             int sceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
 
-            PlayerPrefs.SetInt($"{resourcesType}{sceneIndex}{generationKey}", resourceValue);
+            PlayerPrefs.SetInt($"{resourceKey}{sceneIndex}{generationKey}", resourceValue);
             PlayerPrefs.Save();
         }
     }

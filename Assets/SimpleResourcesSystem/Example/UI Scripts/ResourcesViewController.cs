@@ -14,7 +14,7 @@ namespace SimpleResourcesSystem.Example
         [SerializeField] private GridLayoutGroup group;
         [SerializeField] private ResourcesViewItem viewPrefab;
 
-        private Dictionary<ResourceType, ResourcesViewItem> revourcesView = new();
+        private Dictionary<string, ResourcesViewItem> revourcesView = new();
 
         private void Awake()
         {
@@ -40,20 +40,19 @@ namespace SimpleResourcesSystem.Example
         {
             for (int i = 0; i < resourcesManager.StoredResourcesInfo.Count; i++)
             {
-                ResourceItemInfo resourceInfo = resourcesManager.StoredResourcesInfo.ElementAt(i).Value;
-                ResourceType resourceType = resourceInfo.ResourcesType;
+                ResourceInfo resourceInfo = resourcesManager.StoredResourcesInfo.ElementAt(i).Value;
 
                 ResourcesViewItem viewItem = Instantiate(viewPrefab, group.transform);
-                viewItem.Inititalization(resourceInfo.ResourceSprite, resourceType.ToString(), resourcesManager.StoredResources[resourceType]);
+                viewItem.Inititalization(resourceInfo.ResourceSprite, resourceInfo.ResourcesKey.ToString(), resourcesManager.StoredResources[resourceInfo.ResourcesKey]);
 
-                revourcesView.Add(resourceType, viewItem);
+                revourcesView.Add(resourceInfo.ResourcesKey, viewItem);
             }
         }
 
-        private void OnResourceChanged(ResourceType resourceType, int value)
+        private void OnResourceChanged(ResourceInfo resourceInfo, int value)
         {
-            if (!revourcesView.ContainsKey(resourceType)) return;
-            revourcesView[resourceType].SetAmountValue(value);
+            if (!revourcesView.ContainsKey(resourceInfo.ResourcesKey)) return;
+            revourcesView[resourceInfo.ResourcesKey].SetAmountValue(value);
         }
     }
 }

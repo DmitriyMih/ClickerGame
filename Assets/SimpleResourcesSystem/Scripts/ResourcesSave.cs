@@ -6,17 +6,17 @@ namespace SimpleResourcesSystem
     {
         private const string amountKey = "ResourceAmount";
 
-        public static int LoadResource(ResourceType resourcesType)
+        public static int LoadResource(string resourceKey)
         {
             int sceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
-            return PlayerPrefs.GetInt($"{resourcesType}{sceneIndex}{amountKey}", 0);
+            return PlayerPrefs.GetInt($"{resourceKey}{sceneIndex}{amountKey}", 0);
         }
 
-        public static void SaveResource(ResourceType resourcesType, int resourceValue)
+        public static void SaveResource(string resourceKey, int resourceValue)
         {
             int sceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
             
-            PlayerPrefs.SetInt($"{resourcesType}{sceneIndex}{amountKey}", resourceValue);
+            PlayerPrefs.SetInt($"{resourceKey}{sceneIndex}{amountKey}", resourceValue);
             PlayerPrefs.Save();
         }
     }

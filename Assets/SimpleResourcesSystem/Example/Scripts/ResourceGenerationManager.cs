@@ -9,11 +9,11 @@ namespace SimpleResourcesSystem.Example
     public class ResourceGenerationManager : MonoBehaviour
     {
         private ResourcesManager resourcesManager;
-        public Dictionary<ResourceType, int> ResourcesGenerationInfo { get; private set; } = new();
-        private Dictionary<ResourceType, Coroutine> coroutineDictionary = new();
+        public Dictionary<string, int> ResourcesGenerationInfo { get; private set; } = new();
+        private Dictionary<string, Coroutine> coroutineDictionary = new();
 
         private void Awake()
-        {            
+        {
             resourcesManager = GetComponent<ResourcesManager>();
         }
 
@@ -21,34 +21,36 @@ namespace SimpleResourcesSystem.Example
         {
             for (int i = 0; i < resourcesManager.StoredResourcesInfo.Count; i++)
             {
-                ResourceItemInfo resourceInfo = resourcesManager.StoredResourcesInfo.ElementAt(i).Value;
-                ResourcesGenerationInfo.Add(resourceInfo.ResourcesType, ResourceGenerationSave.LoadGenerationValue(resourceInfo.ResourcesType, 1));
-                SetGenerationState(resourceInfo.ResourcesType, ResourcesGenerationInfo[resourceInfo.ResourcesType] > 0, resourceInfo.GenerationTime);
+                if (resourcesManager.StoredResourcesInfo.ElementAt(i).Value is ResourceGenerationInfo resourceInfo)
+                {
+                    ResourcesGenerationInfo.Add(resourceInfo.ResourcesKey, ResourceGenerationSave.LoadGenerationValue(resourceInfo.ResourcesKey, 1));
+                    SetGenerationState(resourceInfo.ResourcesKey, ResourcesGenerationInfo[resourceInfo.ResourcesKey] > 0, resourceInfo.GenerationTime);
+                }
             }
         }
 
-        private void SetGenerationState(ResourceType resourceType, bool state, float generationTime)
+        private void SetGenerationState(string resourceKey, bool state, float generationTime)
         {
-            if (coroutineDictionary.ContainsKey(resourceType))
-                StopCoroutine(coroutineDictionary[resourceType]);
+            if (coroutineDictionary.ContainsKey(resourceKey))
+                StopCoroutine(coroutineDictionary[resourceKey]);
 
             if (!state)
                 return;
 
-            Coroutine coroutine = StartCoroutine(ResourceGeneration(resourceType, generationTime));
-            coroutineDictionary.Add(resourceType, coroutine);
+            Coroutine coroutine = StartCoroutine(ResourceGeneration(resourceKey, generationTime));
+            coroutineDictionary.Add(resourceKey, coroutine);
         }
 
-        public void AddGeneratedResourceValue(ResourceType resourceType, int value)
+        public void AddGeneratedResourceValue(string resourceInfo, int value)
         {
-            if (!ResourcesGenerationInfo.ContainsKey(resourceType))
+            if (!ResourcesGenerationInfo.ContainsKey(resourceInfo))
                 return;
 
             value = Mathf.Clamp(value, 0, int.MaxValue);
-            ResourcesGenerationInfo[resourceType] = Mathf.Clamp(ResourcesGenerationInfo[resourceType] + value, 0, int.MaxValue);
+            ResourcesGenerationInfo[resourceInfo] = Mathf.Clamp(ResourcesGenerationInfo[resourceInfo] + value, 0, int.MaxValue);
         }
 
-        private IEnumerator ResourceGeneration(ResourceType resourceType, float generationTime)
+        private IEnumerator ResourceGeneration(string resourceInfo, float generationTime)
         {
             WaitForSeconds wait = new WaitForSeconds(generationTime);
 
@@ -56,8 +58,8 @@ namespace SimpleResourcesSystem.Example
             {
                 yield return wait;
 
-                int resourceValue = ResourcesGenerationInfo[resourceType];
-                resourcesManager.SetResource(resourceType, resourceValue, ActionType.Add);
+                int resourceValue = ResourcesGenerationInfo[resourceInfo];
+                resourcesManager.SetResource(resourceInfo, resourceValue, ActionType.Add);
             }
         }
     }
