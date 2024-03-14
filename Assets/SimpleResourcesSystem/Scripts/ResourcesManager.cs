@@ -10,8 +10,10 @@ namespace SimpleResourcesSystem
         Failed
     }
 
-    public class ResourcesManager: MonoBehaviour 
+    public class ResourcesManager : MonoBehaviour
     {
+        [field: SerializeField] public int ManagerIndex { get; private set; }
+
         [SerializeField] private List<ResourceInfo> availableResourcesInfo = new();
 
         [Space(), Header("Debug Settings")]
@@ -38,7 +40,7 @@ namespace SimpleResourcesSystem
                     continue;
                 }
 
-                int resourceValue = ResourcesSave.LoadResource(availableResourcesInfo[i].ResourcesKey);
+                int resourceValue = ResourcesSave.LoadResource(availableResourcesInfo[i].ResourcesKey, ManagerIndex);
 
                 StoredResources.Add(resourceInfo.ResourcesKey, resourceValue);
                 StoredResourcesInfo.Add(resourceInfo.ResourcesKey, availableResourcesInfo[i]);
@@ -57,7 +59,7 @@ namespace SimpleResourcesSystem
             return StoredResources[resourceKey] - value >= 0;
         }
 
-        public void SetResource(string resourceKey, int value, ActionType actionType, Action<StatusState> action = null) 
+        public void SetResource(string resourceKey, int value, ActionType actionType, Action<StatusState> action = null)
         {
             if (!StoredResources.ContainsKey(resourceKey))
             {
@@ -78,7 +80,7 @@ namespace SimpleResourcesSystem
             StoredResources[resourceKey] = newResourceValue;
             OnResourcesChanged?.Invoke(StoredResourcesInfo[resourceKey], newResourceValue);
 
-            ResourcesSave.SaveResource(resourceKey, newResourceValue);
+            ResourcesSave.SaveResource(resourceKey, ManagerIndex, newResourceValue);
             action?.Invoke(StatusState.Success);
         }
 

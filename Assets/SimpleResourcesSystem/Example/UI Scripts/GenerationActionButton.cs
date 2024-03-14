@@ -1,31 +1,27 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Assertions;
 
 namespace SimpleResourcesSystem.Example
 {
-    [RequireComponent(typeof(Button))]
-    public class GenerationActionButton:MonoBehaviour
+    public class GenerationActionButton : BaseActionButton
     {
-        private Button actionButton;
-        [SerializeField] private ResourceGenerationManager generationManager;
-
-        [Space]
-        [SerializeField] private ActionType actionType;
-
+        [Header("Generation Settings")]
+        [SerializeField] private ResourcesGenerationManager generationManager;
         [SerializeField] private ResourceGenerationInfo generationInfo;
         [SerializeField] private int generationValue;
 
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
+
             Assert.IsNotNull(generationManager);
             Assert.IsNotNull(generationInfo);
 
-            actionButton = GetComponent<Button>();
-            actionButton.onClick.AddListener(() => OnActionButtonClick());
+            actionTitle.text = $"{actionType} {generationInfo.ResourcesKey}" +
+                $"\nGeneration";
         }
 
-        private void OnActionButtonClick()
+        protected override void OnActionButtonClick()
         {
             generationManager.SetResourceGeneration(generationInfo.ResourcesKey, generationValue, actionType);
         }

@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 
 namespace SimpleResourcesSystem.Example
 {
-    public class ViewController : MonoBehaviour
+    public class ResourcesViewController : MonoBehaviour
     {
         [SerializeField] private GridLayoutGroup group;
 

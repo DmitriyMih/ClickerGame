@@ -15,7 +15,7 @@ namespace SimpleResourcesSystem.Example
         [SerializeField] private ResourcesViewItem resourceViewPrefab;
 
         [Space]
-        [SerializeField] private ResourceGenerationManager generationManager;
+        [SerializeField] private ResourcesGenerationManager generationManager;
         [SerializeField] private GenerationViewItem generationViewPrefab;
 
         private Dictionary<string, ResourcesViewItem> revourcesView = new();

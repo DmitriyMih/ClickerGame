@@ -1,31 +1,28 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Assertions;
 
 namespace SimpleResourcesSystem.Example
 {
-    [RequireComponent(typeof(Button))]
-    public class ResourcesActionButton : MonoBehaviour
+    public class ResourcesActionButton : BaseActionButton
     {
-        private Button actionButton;
+        [Header("Resources Settings")]
         [SerializeField] private ResourcesManager resourcesManager;
-
-        [Space]
-        [SerializeField] private ActionType actionType;
 
         [SerializeField] private ResourceInfo resourcesInfo;
         [SerializeField] private int resourceValue;
 
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
+
             Assert.IsNotNull(resourcesManager);
             Assert.IsNotNull(resourcesInfo);
 
-            actionButton = GetComponent<Button>();
-            actionButton.onClick.AddListener(() => OnActionButtonClick());
+            actionTitle.text = $"{actionType}" +
+                $"\n{resourcesInfo.ResourcesKey}";
         }
 
-        private void OnActionButtonClick()
+        protected override void OnActionButtonClick()
         {
             resourcesManager.SetResource(resourcesInfo.ResourcesKey, resourceValue, actionType);
         }

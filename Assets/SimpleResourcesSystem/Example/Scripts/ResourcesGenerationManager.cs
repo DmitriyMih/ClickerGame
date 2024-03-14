@@ -7,14 +7,14 @@ using UnityEngine;
 namespace SimpleResourcesSystem.Example
 {
     [RequireComponent(typeof(ResourcesManager))]
-    public class ResourceGenerationManager : MonoBehaviour
+    public class ResourcesGenerationManager : MonoBehaviour
     {
         private ResourcesManager resourcesManager;
 
         [Space(), Header("Debug Settings")]
         [SerializeField] private bool showOutput;
 
-        public Dictionary<string, ResourceGenerationInfo> ResourcesGenerationInfo { get; private set; } = new();
+        public Dictionary<string, ResourceGenerationInfo> StoredGenerationInfo { get; private set; } = new();
         public Dictionary<string, int> StoredResourcesGeneration { get; private set; } = new();
         private Dictionary<string, Coroutine> coroutineDictionary = new();
 
@@ -30,18 +30,17 @@ namespace SimpleResourcesSystem.Example
             Inititalization();
         }
 
-        private async void Inititalization()
+        private void Inititalization()
         {
             for (int i = 0; i < resourcesManager.StoredResourcesInfo.Count; i++)
             {
                 Debug.Log(resourcesManager.StoredResourcesInfo.ElementAt(i).Value as ResourceGenerationInfo);
                 if (resourcesManager.StoredResourcesInfo.ElementAt(i).Value is ResourceGenerationInfo resourceInfo)
                 {
-                    ResourcesGenerationInfo.Add(resourceInfo.ResourcesKey, resourceInfo);
+                    StoredGenerationInfo.Add(resourceInfo.ResourcesKey, resourceInfo);
                     StoredResourcesGeneration.Add(resourceInfo.ResourcesKey, ResourceGenerationSave.LoadGenerationValue(resourceInfo.ResourcesKey, 1));
                     SetGenerationState(resourceInfo.ResourcesKey, StoredResourcesGeneration[resourceInfo.ResourcesKey] > 0, resourceInfo.GenerationTime);
-
-                    await System.Threading.Tasks.Task.Delay(1);
+                    
                     OnGenerationChanged?.Invoke(resourceInfo, StoredResourcesGeneration[resourceInfo.ResourcesKey], resourceInfo.GenerationTime);
                 }
             }
@@ -86,7 +85,7 @@ namespace SimpleResourcesSystem.Example
             OutputInfo($"Set Resource {generationKey} | {newResourceValue}");
 
             StoredResourcesGeneration[generationKey] = newResourceValue;
-            ResourceGenerationInfo generationInfo = ResourcesGenerationInfo[generationKey];
+            ResourceGenerationInfo generationInfo = StoredGenerationInfo[generationKey];
 
             OnGenerationChanged?.Invoke(generationInfo, newResourceValue, generationInfo.GenerationTime);
 
