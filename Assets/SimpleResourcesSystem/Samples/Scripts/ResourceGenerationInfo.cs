@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace SimpleResourcesSystem.Example
+namespace SimpleResourcesSystem.DemoSamples
 {
     [CreateAssetMenu(menuName = "Resources/New Generation Info")]
     public class ResourceGenerationInfo : ResourceInfo

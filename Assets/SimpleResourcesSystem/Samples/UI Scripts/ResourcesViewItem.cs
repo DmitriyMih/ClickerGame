@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.Assertions;
 using TMPro;
 
-namespace SimpleResourcesSystem.Example
+namespace SimpleResourcesSystem.DemoSamples
 {
     public class ResourcesViewItem : MonoBehaviour
     {

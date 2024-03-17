@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-namespace SimpleResourcesSystem.Example
+namespace SimpleResourcesSystem.DemoSamples
 {
     public class MultipleViewController : MonoBehaviour
     {

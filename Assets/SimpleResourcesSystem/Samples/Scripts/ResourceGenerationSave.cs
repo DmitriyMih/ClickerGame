@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace SimpleResourcesSystem.Example
+namespace SimpleResourcesSystem.DemoSamples
 {
     internal class ResourceGenerationSave
     {

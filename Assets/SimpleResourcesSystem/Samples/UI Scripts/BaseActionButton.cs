@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.Assertions;
 using TMPro;
 
-namespace SimpleResourcesSystem.Example
+namespace SimpleResourcesSystem.DemoSamples
 {
     [RequireComponent(typeof(Button))]
     public abstract class BaseActionButton : MonoBehaviour

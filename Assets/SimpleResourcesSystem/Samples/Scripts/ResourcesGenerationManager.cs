@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace SimpleResourcesSystem.Example
+namespace SimpleResourcesSystem.DemoSamples
 {
     [RequireComponent(typeof(ResourcesManager))]
     public class ResourcesGenerationManager : MonoBehaviour

@@ -36,7 +36,7 @@ namespace SimpleResourcesSystem
                 ResourceInfo resourceInfo = availableResourcesInfo[i];
                 if (StoredResources.ContainsKey(resourceInfo.ResourcesKey))
                 {
-                    OutputInfo($"Resources {resourceInfo} Is Already Initialized In Dictionary");
+                    Debug.LogError($"Resources {resourceInfo} Is Already Initialized In Dictionary");
                     continue;
                 }
 
