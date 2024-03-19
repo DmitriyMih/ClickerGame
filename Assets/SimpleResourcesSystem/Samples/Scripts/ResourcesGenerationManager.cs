@@ -87,7 +87,7 @@ namespace SimpleResourcesSystem.DemoSamples
             Debug.Log($"Add Generation {generationKey} | {newResourceValue} || {gameObject} / {StoredResourcesGeneration[generationKey]}");
             OnGenerationChanged?.Invoke(StoredGenerationInfo[generationKey], StoredResourcesGeneration[generationKey], StoredGenerationInfo[generationKey].GenerationTime);
 
-            ResourceGenerationSave.SaveGeneration(generationKey, newResourceValue);
+            ResourceGenerationSave.SaveGeneration(generationKey, StoredResourcesGeneration[generationKey]);
         }
 
         private IEnumerator ResourceGeneration(string resourceInfo, float generationTime)

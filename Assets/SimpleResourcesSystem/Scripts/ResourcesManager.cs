@@ -81,7 +81,7 @@ namespace SimpleResourcesSystem
             Debug.Log($"Add Resource {resourceKey} | {newResourceValue} || {gameObject} / {StoredResources[resourceKey]}");
             OnResourcesChanged?.Invoke(StoredResourcesInfo[resourceKey], StoredResources[resourceKey]);
 
-            ResourcesSave.SaveResource(resourceKey, ManagerIndex, newResourceValue);
+            ResourcesSave.SaveResource(resourceKey, ManagerIndex, StoredResources[resourceKey]);
             callback?.Invoke(StatusState.Success);
         }
     }
