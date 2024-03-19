@@ -3,6 +3,7 @@
     public enum ActionType
     {
         Add,
-        Remove
+        Remove,
+        Replace
     }
 }
