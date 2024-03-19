@@ -15,12 +15,6 @@ namespace SimpleResourcesSystem.IdleSystem.GenerationSystem
             Assert.IsNotNull(generationAmountText);
         }
 
-        public void Inititalization(Sprite recourceSprite, string recourceName, int resourceValue, int generationValue, float generationTime)
-        {
-            Inititalization(recourceSprite, recourceName, resourceValue);
-            SetGenerationAmountValue(generationValue, generationTime);
-        }
-
         public void SetGenerationAmountValue(int value, float time)
         {
             generationAmountText.text = $"+{value}/{Mathf.RoundToInt(time)} sec";

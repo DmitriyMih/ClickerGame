@@ -17,9 +17,6 @@ namespace SimpleResourcesSystem.IdleSystem
 
         [SerializeField] private List<ResourceInfo> availableResourcesInfo = new();
 
-        [Space(), Header("Debug Settings")]
-        [SerializeField] private bool showOutput;
-
         public Dictionary<string, ResourceInfo> StoredResourcesInfo { get; private set; } = new();
         public Dictionary<string, int> StoredResources { get; private set; } = new();
 

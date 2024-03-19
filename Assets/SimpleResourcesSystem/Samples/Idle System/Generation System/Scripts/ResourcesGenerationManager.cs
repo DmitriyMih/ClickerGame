@@ -11,9 +11,6 @@ namespace SimpleResourcesSystem.IdleSystem.GenerationSystem
     {
         private ResourcesIdleManager resourcesManager;
 
-        [Space(), Header("Debug Settings")]
-        [SerializeField] private bool showOutput;
-
         public Dictionary<string, ResourceGenerationInfo> StoredGenerationInfo { get; private set; } = new();
         public Dictionary<string, int> StoredResourcesGeneration { get; private set; } = new();
         private Dictionary<string, Coroutine> coroutineDictionary = new();

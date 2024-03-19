@@ -48,9 +48,8 @@ namespace SimpleResourcesSystem.IdleSystem.GenerationSystem
                     GenerationViewItem generationViewItem = Instantiate(generationViewPrefab, group.transform);
                     generationsView.Add(generationInfo.ResourcesKey, generationViewItem);
 
-                    generationViewItem.Inititalization(generationInfo.ResourceSprite, generationInfo.ResourcesKey.ToString(),
-                        resourcesManager.StoredResources[generationInfo.ResourcesKey], generationManager.StoredResourcesGeneration[generationInfo.ResourcesKey],
-                        generationInfo.GenerationTime);
+                    generationViewItem.Inititalization(generationInfo.ResourceSprite, generationInfo.ResourcesKey, resourcesManager.StoredResources[generationInfo.ResourcesKey]);
+                    //generationViewItem.SetAmountValue(generationManager.StoredResourcesGeneration[generationInfo.ResourcesKey]);
                 }
             }
         }

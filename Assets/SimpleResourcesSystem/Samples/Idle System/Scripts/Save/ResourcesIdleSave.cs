@@ -44,8 +44,6 @@ namespace SimpleResourcesSystem.IdleSystem
         {
             string key = $"{amountKey}.{resourceKey}.{managerKey}";
             ChangeKeyByType(ref key, loadType);
-
-            Debug.Log($"Load Resource By Key {key}");
             return Load(key);
         }
 
@@ -53,8 +51,6 @@ namespace SimpleResourcesSystem.IdleSystem
         {
             string key = $"{amountKey}.{resourceKey}.{managerKey}";
             ChangeKeyByType(ref key, loadType);
-
-            Debug.Log($"Save Resource By Key {key}");
             Save(key, resourceValue);
         }
 

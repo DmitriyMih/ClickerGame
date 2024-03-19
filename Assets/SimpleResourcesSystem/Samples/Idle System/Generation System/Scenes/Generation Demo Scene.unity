@@ -259,14 +259,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 767852640}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b31d1c3a64d0a0e40a005be87368ca63, type: 3}
+  m_Script: {fileID: 11500000, guid: 6a377073a3c397b41a65c3c1cedc6cd3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  <ManagerIndex>k__BackingField: 0
+  <ManagerKey>k__BackingField: Idle Manager Save Key
+  <SaveLoadType>k__BackingField: 0
   availableResourcesInfo:
   - {fileID: 11400000, guid: 1133281d8044e8940b9a5960431c129f, type: 2}
   - {fileID: 11400000, guid: 2947b32b235dbb1429bea5b31784fe90, type: 2}
-  showOutput: 0
 --- !u!114 &767852643
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,10 +276,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 767852640}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c1db396d4ce008848937647d09de2cb2, type: 3}
+  m_Script: {fileID: 11500000, guid: e37c53266e7987546b5833c45b4ac475, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  showOutput: 0
 --- !u!1 &791857246
 GameObject:
   m_ObjectHideFlags: 0
@@ -1230,6 +1229,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 791857247}
     m_Modifications:
     - target: {fileID: 6252546398274743319, guid: c0adb21e41394d64497f26fc1bbece13, type: 3}
+      propertyPath: actionType
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6252546398274743319, guid: c0adb21e41394d64497f26fc1bbece13, type: 3}
       propertyPath: generationInfo
       value: 
       objectReference: {fileID: 11400000, guid: 2947b32b235dbb1429bea5b31784fe90, type: 2}
@@ -1339,6 +1342,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1058195280}
     m_Modifications:
+    - target: {fileID: 6252546398274743319, guid: c0adb21e41394d64497f26fc1bbece13, type: 3}
+      propertyPath: actionType
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6252546398274743319, guid: c0adb21e41394d64497f26fc1bbece13, type: 3}
       propertyPath: generationInfo
       value: 
@@ -1451,7 +1458,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2060502617}
-  - component: {fileID: 2060502619}
+  - component: {fileID: 2060502618}
   m_Layer: 5
   m_Name: Resources View Controller
   m_TagString: Untagged
@@ -1480,7 +1487,7 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
---- !u!114 &2060502619
+--- !u!114 &2060502618
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1489,12 +1496,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 2060502616}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d69ea0b589562b244ad0bf9483e01186, type: 3}
+  m_Script: {fileID: 11500000, guid: 83c8cb46e20d64d4499806ebe39ca806, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   group: {fileID: 1619687525}
   resourcesManager: {fileID: 767852642}
-  resourceViewPrefab: {fileID: 8251959817792361431, guid: 0e2f0f7887a2cca459e925b738e3cf1f, type: 3}
   generationManager: {fileID: 767852643}
   generationViewPrefab: {fileID: 3185713580894397168, guid: 37e6f9a1fb360ed4e8ca196ed18bd43c, type: 3}
 --- !u!1 &2120144167
