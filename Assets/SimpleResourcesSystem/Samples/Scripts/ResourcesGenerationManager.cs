@@ -40,7 +40,7 @@ namespace SimpleResourcesSystem.DemoSamples
                     StoredGenerationInfo.Add(resourceInfo.ResourcesKey, resourceInfo);
                     StoredResourcesGeneration.Add(resourceInfo.ResourcesKey, ResourceGenerationSave.LoadGenerationValue(resourceInfo.ResourcesKey, 1));
                     SetGenerationState(resourceInfo.ResourcesKey, StoredResourcesGeneration[resourceInfo.ResourcesKey] > 0, resourceInfo.GenerationTime);
-                    
+
                     OnGenerationChanged?.Invoke(resourceInfo, StoredResourcesGeneration[resourceInfo.ResourcesKey], resourceInfo.GenerationTime);
                 }
             }
@@ -63,7 +63,7 @@ namespace SimpleResourcesSystem.DemoSamples
         {
             if (!StoredResourcesGeneration.ContainsKey(generationKey))
             {
-                OutputInfo($"Resources {generationKey} Not Available");
+                Debug.LogError($"Resources {generationKey} Not Available");
                 return false;
             }
 
@@ -74,41 +74,33 @@ namespace SimpleResourcesSystem.DemoSamples
         {
             if (!StoredResourcesGeneration.ContainsKey(generationKey))
             {
-                OutputInfo($"Resources {generationKey} Not Available");
+                Debug.LogError($"Resources {generationKey} Not Available");
                 return;
-            }
+            } 
 
             if (actionType == ActionType.Remove && !HasGenerationAmount(generationKey, value))
                 return;
 
-            int newResourceValue = Mathf.Clamp(StoredResourcesGeneration[generationKey] + value * (actionType == ActionType.Add ? 1 : -1), 0, int.MaxValue);
-            OutputInfo($"Set Resource {generationKey} | {newResourceValue}");
-
-            StoredResourcesGeneration[generationKey] = newResourceValue;
-            ResourceGenerationInfo generationInfo = StoredGenerationInfo[generationKey];
-
-            OnGenerationChanged?.Invoke(generationInfo, newResourceValue, generationInfo.GenerationTime);
+            int newResourceValue = value * (actionType == ActionType.Add ? 1 : -1);
+            StoredResourcesGeneration[generationKey] = Mathf.Clamp(StoredResourcesGeneration[generationKey] + newResourceValue, 0, int.MaxValue);
+     
+            Debug.Log($"Add Generation {generationKey} | {newResourceValue} || {gameObject} / {StoredResourcesGeneration[generationKey]}");
+            OnGenerationChanged?.Invoke(StoredGenerationInfo[generationKey], StoredResourcesGeneration[generationKey], StoredGenerationInfo[generationKey].GenerationTime);
 
             ResourceGenerationSave.SaveGeneration(generationKey, newResourceValue);
         }
 
         private IEnumerator ResourceGeneration(string resourceInfo, float generationTime)
         {
-            WaitForSeconds wait = new WaitForSeconds(generationTime);
+            WaitForSeconds generationDelay = new WaitForSeconds(generationTime);
 
             while (true)
             {
-                yield return wait;
+                yield return generationDelay;
 
                 int resourceValue = StoredResourcesGeneration[resourceInfo];
-                resourcesManager.SetResource(resourceInfo, resourceValue, ActionType.Add);
+                resourcesManager.ChangeResource(resourceInfo, resourceValue, ActionType.Add);
             }
-        }
-
-        private void OutputInfo(string newOutput)
-        {
-            if (!showOutput) return;
-            Debug.Log(newOutput);
         }
     }
 }

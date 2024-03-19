@@ -52,42 +52,37 @@ namespace SimpleResourcesSystem
         {
             if (!StoredResources.ContainsKey(resourceKey))
             {
-                OutputInfo($"Resources {resourceKey} Not Available");
+                Debug.LogError($"Resources {resourceKey} Not Available");
                 return false;
             }
 
             return StoredResources[resourceKey] - value >= 0;
         }
 
-        public void SetResource(string resourceKey, int value, ActionType actionType, Action<StatusState> action = null)
+        public void ChangeResource(string resourceKey, int value, ActionType actionType, Action<StatusState> callback = null)
         {
             if (!StoredResources.ContainsKey(resourceKey))
             {
-                OutputInfo($"Resources {resourceKey} Not Available");
-                action?.Invoke(StatusState.Failed);
+                Debug.LogError($"Resources {resourceKey} Not Available");
+                callback?.Invoke(StatusState.Failed);
                 return;
             }
 
             if (actionType == ActionType.Remove && !HasResourcesAmount(resourceKey, value))
             {
-                action?.Invoke(StatusState.Failed);
+                Debug.Log($"Not Enought {resourceKey} | Available {StoredResources[resourceKey]} / Try Get {value}");
+                callback?.Invoke(StatusState.Failed);
                 return;
             }
 
-            int newResourceValue = Mathf.Clamp(StoredResources[resourceKey] + value * (actionType == ActionType.Add ? 1 : -1), 0, int.MaxValue);
-            OutputInfo($"Set Resource {resourceKey} | {newResourceValue}");
+            int newResourceValue = value * (actionType == ActionType.Add ? 1 : -1);
+            StoredResources[resourceKey] = Mathf.Clamp(StoredResources[resourceKey] + newResourceValue, 0, int.MaxValue);
 
-            StoredResources[resourceKey] = newResourceValue;
-            OnResourcesChanged?.Invoke(StoredResourcesInfo[resourceKey], newResourceValue);
+            Debug.Log($"Add Resource {resourceKey} | {newResourceValue} || {gameObject} / {StoredResources[resourceKey]}");
+            OnResourcesChanged?.Invoke(StoredResourcesInfo[resourceKey], StoredResources[resourceKey]);
 
             ResourcesSave.SaveResource(resourceKey, ManagerIndex, newResourceValue);
-            action?.Invoke(StatusState.Success);
-        }
-
-        private void OutputInfo(string newOutput)
-        {
-            if (!showOutput) return;
-            Debug.Log(newOutput);
+            callback?.Invoke(StatusState.Success);
         }
     }
 }

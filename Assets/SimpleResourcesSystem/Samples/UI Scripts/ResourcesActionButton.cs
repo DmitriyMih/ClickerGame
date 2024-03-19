@@ -24,7 +24,7 @@ namespace SimpleResourcesSystem.DemoSamples
 
         protected override void OnActionButtonClick()
         {
-            resourcesManager.SetResource(resourcesInfo.ResourcesKey, resourceValue, actionType);
+            resourcesManager.ChangeResource(resourcesInfo.ResourcesKey, resourceValue, actionType);
         }
     }
 }
