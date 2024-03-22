@@ -1,5 +1,13 @@
 {
   "dependencies": {
+    "com.dmitriy_tyt.baseresourcessystem": {
+      "version": "file:C:/Users/Дмитрий/Downloads/Test/com.dmitriytyt.baseresourcesystem",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.unity.textmeshpro": "3.0.6"
+      }
+    },
     "com.unity.collab-proxy": {
       "version": "1.17.7",
       "depth": 0,
@@ -71,7 +79,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.textmeshpro": {
-      "version": "3.0.6",
+      "version": "3.0.8",
       "depth": 0,
       "source": "registry",
       "dependencies": {
