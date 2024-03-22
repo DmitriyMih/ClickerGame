@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using SimpleResourcesSystem;
 
-public class Test : MonoBehaviour
+public class TestChild : TestParent
 {
-    public BaseResourceInfo resourceInfo;
+
 }
