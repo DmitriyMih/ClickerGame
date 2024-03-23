@@ -6,6 +6,7 @@ using System.Collections.Generic;
 namespace SimpleResourcesSystem.ResourceManagementSystem
 {
     using SimpleItemSystem;
+    using System;
     using System.Reflection;
 
     public class ResourcesItemInfoConverterWindow : BaseResourcesConverterWindow
@@ -23,43 +24,50 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             base.DisplayGUI();
 
             if (GUILayout.Button("Draw"))
-                DisplayItem(new[] { typeof(TestParent)});
-                //DisplayItem(new[] { typeof(SimpleResourcesItemInfo), typeof(BaseResourceInfo) });
+                DisplayItem(new[] { typeof(SimpleResourcesItemInfo) });
+            //DisplayItem(new[] { typeof(BaseResourceInfo) });
+            //DisplayItem(new[] { typeof(SimpleResourcesItemInfo), typeof(BaseResourceInfo) });
         }
-        
-        private void DisplayItem<TClass>(TClass[] classes) where TClass : System.Type
+
+        private void DisplayItem<TClass>(TClass[] classes) where TClass : Type
         {
-            Debug.Log(classes);
-            List<FieldInfo> mi = new();
+            Debug.Log(classes.Length);
 
-            for (int i = 0; i < classes.Length; i++)
-                mi.AddRange(classes[i].GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance));
+            for (int c = 0; c < classes.Length; c++)
+            {
+                BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+                FieldInfo[] fields = classes[c].GetFields(flags);
 
-            Debug.Log($"Start Draw {mi.Count}");
+                Dictionary<FieldInfo, LoadMarkerAttribute> attributesDictionary = new();
 
-            for (int i = 0; i < mi.Count; i++)
-                Debug.Log($"{i} | {mi[i]}");
+                Debug.Log("");
+                Debug.Log($"Class: {classes[c]}");
 
-            //Debug.Log(typeof(TClass));
+                for (int f = 0; f < fields.Length; f++)
+                {
+                    if (fields[f].TryGetCustomAttribute(fields[f], out LoadMarkerAttribute loadMarkerAttribute))
+                    {
+                        Debug.Log($"Get By Field {fields[f]} | Attribute {loadMarkerAttribute}");
 
-            //for (int i = 0; i < classes.Count; i++)
-            //Debug.Log(classes[i]);
+                        if (attributesDictionary.ContainsKey(fields[f]))
+                        {
+                            Debug.LogError($"Field {fields[f]} Not Has Been Added To Dictionary");
+                            continue;
+                        }
+                        else
+                            attributesDictionary.Add(fields[f], loadMarkerAttribute);
+                    }
+                    else
+                        Debug.Log($"Not Get By Field {fields[f]}");
 
-            //List<SerializedProperty> sp = new List<SerializedProperty>();
+                    //object[] os = fields[f].GetCustomAttributes(typeof(LoadMarkerAttribute), false);
+                    //Debug.Log($"Field - {fields[f]} / Type: {fields[f].FieldType} | {fields[f].GetCustomAttributes(typeof(LoadMarkerAttribute), false).Length}");
+                    //Debug.Log($"Field I Count - {os.Length}");
 
-            //FieldInfo[] mi = typeof(SimpleResourcesItemInfo).GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-
-            //Debug.Log($"Start Draw {mi.Length}");
-
-            //for (int i = 0; i < mi.Length; i++)
-            //{
-            //    Debug.Log($"{i} | {mi[i]}");
-            //    //if (mi[i].IsDefined(typeof(HideInInspector)) == false)
-            //    //{
-
-            //    //sp.Add(serializedObject.FindProperty(mi[i].Name));
-            //    //}
-            //}
+                    //for (int i = 0; i < os.Length; i++)
+                    //Debug.Log($"{f}.{i} | {os[i]}");
+                }
+            }
         }
     }
 }
