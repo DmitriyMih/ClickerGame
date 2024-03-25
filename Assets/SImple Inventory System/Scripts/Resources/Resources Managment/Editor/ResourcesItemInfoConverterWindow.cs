@@ -2,6 +2,7 @@
 using UnityEditor;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SimpleResourcesSystem.ResourceManagementSystem
 {
@@ -51,26 +52,24 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                     classes[i].OutputDictionary(fieldsDictionary, "Field", "Attribute");
 
                 Debug.Log("Constructors:");
-                if(classes[i].TryGetCustomAttributes(constructors, out constructorsDictionary))
+                if (classes[i].TryGetCustomAttributes(constructors, out constructorsDictionary))
                     classes[i].OutputDictionary(constructorsDictionary, "Constructor Info", "Attribute");
 
-                //{
-                //    Debug.Log($"Field {f} | {fields[f]}");
-                //    //if (fields[f].TryGetCustomAttribute(fields[f], out LoadMarkerAttribute loadMarkerAttribute))
-                //    //{
-                //    //    Debug.Log($"Get By Field {fields[f]} | Attribute {loadMarkerAttribute}");
+                List<BaseMarkerAttribute> markers = new();
+                markers.AddRange(fieldsDictionary.Values);
+                markers.AddRange(constructorsDictionary.Values);
 
-                //        //    if (attributesDictionary.ContainsKey(fields[f]))
-                //        //    {
-                //        //        Debug.LogError($"Field {fields[f]} Not Has Been Added To Dictionary");
-                //        //        continue;
-                //        //    }
-                //        //    else
-                //        //        attributesDictionary.Add(fields[f], loadMarkerAttribute);
-                //        //}
-                //        //else
-                //        //    Debug.Log($"Not Get By Field {fields[f]}");
-                //}
+                for (int x = 0; x < markers.Count; x++)
+                    Debug.Log($"{x} : {markers[x].Column}");
+
+                Debug.Log("");
+                markers.Sort((item1, item2) => item1.Column.CompareTo(item2.Column));
+
+                for (int x = 0; x < markers.Count; x++)
+                {
+                    Debug.Log(markers[x].GetType().GetProperty("Column"));
+                    Debug.Log($"{x} : {markers[x].Column}");
+                }
             }
         }
     }
