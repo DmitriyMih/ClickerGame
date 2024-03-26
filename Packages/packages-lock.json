@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.dmitriy_tyt.baseresourcessystem": {
-      "version": "file:C:/Users/dimac/Downloads/com.dmitriytyt.baseresourcesystem/com.dmitriytyt.baseresourcesystem",
+      "version": "file:C:/Users/Дмитрий/Downloads/com.dmitriytyt.baseresourcesystem",
       "depth": 0,
       "source": "local",
       "dependencies": {
