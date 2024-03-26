@@ -12,6 +12,8 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
     public class ResourcesItemInfoConverterWindow : BaseResourcesConverterWindow
     {
+        private const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
         [MenuItem("My Tools/Simple Resources Item Info Converter Window")]
         public static void ShowWindow()
         {
@@ -23,54 +25,48 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             base.DisplayGUI();
 
             if (GUILayout.Button("Draw"))
-                DisplayItem(new[] { typeof(SimpleResourcesItemInfo) });
-            //DisplayItem(new[] { typeof(SimpleResourcesItemInfo), typeof(BaseResourceInfo) });
-            //DisplayItem(new[] { typeof(BaseResourceInfo) });
+                DisplayItem(new[] { new SimpleResourcesItemInfo() });
+
         }
 
-        private void DisplayItem<TClass>(TClass[] classes) where TClass : Type
+        private bool GetFieldsParsingPropperties(object targetClass, out List<MarkersStorage<LoadMarkerAttribute, FieldInfo>> markersStorages)
         {
-            Debug.Log(classes.Length);
+            markersStorages = new();
 
-            for (int i = 0; i < classes.Length; i++)
+            Type type = targetClass.GetType();
+            FieldInfo[] fields = type.GetFields(flags);
+
+            Debug.Log("Fields:");
+            if (!ConverterSupports.TryGetCustomAttributes(fields, out markersStorages))
+                return false;
+
+            ConverterSupports.OutputMarkersStruct(markersStorages, "Do: Field", "Attribute");
+            markersStorages.Sort((item1, item2) => item1.MarkerAttribute.Column.CompareTo(item2.MarkerAttribute.Column));
+            ConverterSupports.OutputMarkersStruct(markersStorages, "To -> Field", "Attribute");
+
+            return markersStorages.Count > 0;
+        }
+
+        private void DisplayItem(object targetClass)
+        {
+            if (GetFieldsParsingPropperties(targetClass, out List<MarkersStorage<LoadMarkerAttribute, FieldInfo>> markersStorages))
             {
-                BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-                //FieldInfo[] fields = classes[c].GetFields(flags);
-
-                FieldInfo[] fields = classes[i].GetFields(flags);
-                ConstructorInfo[] constructors = classes[i].GetConstructors();
-
-                Dictionary<FieldInfo, LoadMarkerAttribute> fieldsDictionary = new();
-                Dictionary<ConstructorInfo, LoadCunstructorMarkerAttribute> constructorsDictionary = new();
-
-                Debug.Log("");
-                Debug.Log($"Class: {classes[i]}");
-                Debug.Log("-->");
-
-                Debug.Log("Fields:");
-                if (classes[i].TryGetCustomAttributes(fields, out fieldsDictionary))
-                    classes[i].OutputDictionary(fieldsDictionary, "Field", "Attribute");
-
-                Debug.Log("Constructors:");
-                if (classes[i].TryGetCustomAttributes(constructors, out constructorsDictionary))
-                    classes[i].OutputDictionary(constructorsDictionary, "Constructor Info", "Attribute");
-
-                List<BaseMarkerAttribute> markers = new();
-                markers.AddRange(fieldsDictionary.Values);
-                markers.AddRange(constructorsDictionary.Values);
-
-                for (int x = 0; x < markers.Count; x++)
-                    Debug.Log($"{x} : {markers[x].Column}");
-
-                Debug.Log("");
-                markers.Sort((item1, item2) => item1.Column.CompareTo(item2.Column));
-
-                for (int x = 0; x < markers.Count; x++)
-                {
-                    Debug.Log(markers[x].GetType().GetProperty("Column"));
-                    Debug.Log($"{x} : {markers[x].Column}");
-                }
+                Debug.LogError($"Not Get Propperties");
+                return;
             }
+
+            //for (int x = 0; x < fieldsDictionary.Count; x++)
+            //{
+            //    FieldInfo field = fieldsDictionary.ElementAt(x).Key;
+            //    Debug.Log($"Field Value: {field.GetValue(classes[c])}");  //    value
+            //    Debug.Log($"Field Type: {field.GetValue(classes[c]).GetType()}");  //    type
+            //}
+
+            //for (int x = 0; x < constructorsDictionary.Count; x++)
+            //{
+            //    ConstructorInfo constructor = constructorsDictionary.ElementAt(x).Key;
+            //    //Debug.Log($"Field Value: {constructor.GetValue(classes[c])}");
+            //}
         }
     }
 }
