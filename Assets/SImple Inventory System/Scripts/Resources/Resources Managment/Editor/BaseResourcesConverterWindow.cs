@@ -23,16 +23,11 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             Reconnect();
         }
 
-        protected void Output()
-        {
-            GUILayout.Label(callbackText, GetStyle(TextAnchor.MiddleLeft));
-        }
-
         private static void Reconnect()
         {
             GoogleSheetLoaderWindow.LoadCallback -= SimpleResourcesGoogleSheetConverterWindow_LoadCallback;
 
-            callbackText = "";
+            callbackText = default;
             GoogleSheetLoaderWindow.LoadCallback += SimpleResourcesGoogleSheetConverterWindow_LoadCallback;
 
             Debug.Log("Reconnect");
@@ -49,7 +44,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         protected virtual void DisplayGUI()
         {
             GUILayout.Label(titleContent, GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
-            
+
             GUILayout.Space(10);
 
             GUILayout.BeginVertical("HelpBox");

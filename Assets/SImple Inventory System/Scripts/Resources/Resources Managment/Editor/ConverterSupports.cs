@@ -30,6 +30,90 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         {
 
         }
+        private static bool CheckStartComplexString(this string checkString) => checkString.Length > 0 && checkString[0] == '"';
+        private static bool CheckEndComplexString(this string checkString) => checkString.Length > 0 && checkString[checkString.Length - 1] == '"';
+       
+        public static void CheckLineForComplexString(this string line, out List<string> outColumns)
+        {
+            List<string> columns = line.Split(",", System.StringSplitOptions.None).ToList();
+
+            bool findComplexString = false;
+            int complexStringId = -1;
+
+            List<int> removeIndexes = new();
+
+            for (int i = 0; i < columns.Count; i++)
+            {
+                if (!findComplexString)
+                {
+                    if (columns[i].CheckStartComplexString())
+                    {
+                        findComplexString = true;
+                        complexStringId = i;
+
+                        if (columns[i].CheckEndComplexString())
+                        {
+                            columns[complexStringId] = ClearingGoogleSheetMarkup(columns[complexStringId]);
+                            findComplexString = false;
+                            complexStringId = -1;
+                        }
+                    }
+                }
+                else
+                {
+                    if (columns[i].CheckEndComplexString())
+                    {
+                        findComplexString = false;
+
+                        columns[complexStringId] += "," + columns[i];
+                        removeIndexes.Add(i);
+
+                        columns[complexStringId] = ClearingGoogleSheetMarkup(columns[complexStringId]);
+                        complexStringId = -1;
+                    }
+                    else
+                    {
+                        columns[complexStringId] += "," + columns[i];
+                        removeIndexes.Add(i);
+                    }
+                }
+            }
+
+            if (complexStringId > 0)
+                columns[complexStringId] = ClearingGoogleSheetMarkup(columns[complexStringId]);
+
+            for (int i = removeIndexes.Count - 1; i >= 0; i--)
+                columns.RemoveAt(removeIndexes[i]);
+
+            outColumns = new(columns);
+        }
+
+        public static string ClearingGoogleSheetMarkup(string row)
+        {
+            List<string> tempSplit = row.Trim().Split('"', System.StringSplitOptions.None).ToList();
+            string outString = "";
+
+            if (tempSplit[0].Length == 0)
+                tempSplit.RemoveAt(0);
+
+            if (tempSplit[tempSplit.Count - 1].Length == 0)
+                tempSplit.RemoveAt(tempSplit.Count - 1);
+
+            for (int i = 0; i < tempSplit.Count; i++)
+            {
+                if (tempSplit[i].Length == 0)
+                {
+                    if (outString.Length > 0 && outString[outString.Length - 1] == '"')
+                        tempSplit.RemoveAt(i);
+                    else
+                        outString += '"';
+                }
+                else
+                    outString += tempSplit[i];
+            }
+
+            return outString;
+        }
 
         #region Reflection Metods
 
@@ -66,16 +150,22 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 Debug.Log(message);
         }
 
-        public static void OutputDictionary<TAttribute, TMember>(Dictionary<TMember, TAttribute> pairs, string keyTitle, string valueTitle, bool isShow = true)
+        public static void OutputMemberDictionary<TAttribute, TMember>(Dictionary<TMember, TAttribute> pairs, string keyTitle, string valueTitle, bool isShow = true)
                 where TAttribute : System.Attribute
                 where TMember : MemberInfo
         {
             for (int i = 0; i < pairs.Count; i++)
-                Debug.Log($"{i} | {keyTitle}: {pairs.ElementAt(i).Key} / {valueTitle}: {pairs.ElementAt(i).Value}");
+                ConverterLog.Log($"{i} | {keyTitle}: {pairs.ElementAt(i).Key} / {valueTitle}: {pairs.ElementAt(i).Value}", isShow);
+        }
+
+        public static void OutputDictionary<TKey, TValue>(Dictionary<TValue, TKey> pairs, string keyTitle, string valueTitle, bool isShow = true)
+        {
+            for (int i = 0; i < pairs.Count; i++)
+                ConverterLog.Log($"{i} | {keyTitle}: {pairs.ElementAt(i).Key} / {valueTitle}: {pairs.ElementAt(i).Value}", isShow);
         }
 
         public static void OutputMarkersStruct<TAttribute, TMember>(List<MarkersStorage<TAttribute, TMember>> markers, string memberTitle, string ttributeTitle, bool isShow = true)
-            where TAttribute : BaseMarkerAttribute
+            where TAttribute : LoadMarkerAttribute
             where TMember : MemberInfo
         {
             for (int i = 0; i < markers.Count; i++)

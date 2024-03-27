@@ -3,6 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using SimpleResourcesSystem.SimpleItemSystem;
 using System.Reflection;
+using System.Linq;
 
 namespace SimpleResourcesSystem.ResourceManagementSystem
 {
@@ -11,6 +12,9 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
     public class ResourcesItemInfoConverterWindow : BaseResourcesConverterWindow
     {
+        Dictionary<string, string[]> parseStrings = new();
+        public Vector2 scrollPosition = Vector2.zero;
+
         [MenuItem("My Tools/Simple Resources Item Info Converter Window")]
         public static void ShowWindow()
         {
@@ -23,7 +27,48 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             if (GUILayout.Button("Parse Text"))
                 ParseText();
-            //GetParsingPropperties(new SimpleResourcesItemInfo());
+
+            Output();
+        }
+
+        private void Output()
+        {
+            if (callbackText != null && callbackText != "")
+                GUILayout.Label(callbackText, GetStyle(TextAnchor.MiddleLeft, FontStyle.Bold));
+
+            if (parseStrings.Count == 0)
+                return;
+
+            GUILayout.Space(10);
+
+            if(GUILayout.Button("Clear Parse Strings"))
+                parseStrings.Clear();
+
+            GUILayout.Space(10);
+
+            GUILayout.BeginVertical("HelpBox");
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+
+            for (int l = 0; l < parseStrings.Count; l++)
+            {
+                GUILayout.BeginVertical("HelpBox");
+                GUILayout.Space(2.5f);
+
+                string[] rows = parseStrings.ElementAt(l).Value;
+                GUILayout.Label($"Line: {l} | Columns: {rows.Length}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+                GUILayout.Space(2.5f);
+
+                for (int r = 0; r < rows.Length; r++)
+                    GUILayout.Label($"Column: {r} | {rows[r]}");
+
+                GUILayout.Space(5);
+                GUILayout.EndVertical();
+            }
+
+            EditorGUILayout.EndScrollView();
+            GUILayout.EndVertical();
+
+            GUILayout.FlexibleSpace();
         }
 
         #region Propperties Metods
@@ -70,15 +115,35 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 return false;
             }
 
-            return true;
+            ConverterLog.OutputConstructorsStruct(markersStorages, true);
+
+            markersStorages.Sort((item1, item2) => item2.MarkerAttribute.Columns.Length.CompareTo(item1.MarkerAttribute.Columns.Length));
+
+            ConverterLog.OutputConstructorsStruct(markersStorages, true);
+
+            targetConstructor = markersStorages[0];
+            return targetConstructor.MarkerAttribute != null;
         }
 
-        private void GetConstructorParsingPropperties(ConstructorsStruct targetConstructor, out Dictionary<int, ConstructorsStruct> constructorParsePropperties)
+        private bool GetConstructorParsingPropperties(ConstructorsStruct targetConstructor, out Dictionary<int, ConstructorsStruct> constructorParsePropperties)
         {
             constructorParsePropperties = new();
+
+            for (int c = 0; c < targetConstructor.MarkerAttribute.Columns.Length; c++)
+            {
+                if (constructorParsePropperties.ContainsKey(targetConstructor.MarkerAttribute.Columns[c]))
+                {
+                    Debug.LogError($"Marker Has Already Column {targetConstructor.MarkerAttribute.Columns[c]} In Constructor: {targetConstructor.MemberInfo} | Object: {targetConstructor.MarkerAttribute}");
+                    return false;
+                }
+
+                constructorParsePropperties.Add(targetConstructor.MarkerAttribute.Columns[c], targetConstructor);
+            }
+
+            return constructorParsePropperties.Count > 0;
         }
 
-        private void GetParsingPropperties(object targetClass, 
+        private void GetParsingPropperties(object targetClass,
             out Dictionary<int, ConstructorsStruct> constructorParsePropperties,
             out Dictionary<int, FieldsStruct> fieldsParsePropperties)
         {
@@ -90,14 +155,16 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             if (hasConstructors)
             {
-                if (GetTargetConstructor(constructorsStorages, out ConstructorsStruct targetConstructor))
-                    hasConstructors = true;
-                else
-                    hasConstructors = false;
+                hasConstructors = GetTargetConstructor(constructorsStorages, out ConstructorsStruct targetConstructor);
+
+                if (hasConstructors)
+                    hasConstructors = GetConstructorParsingPropperties(targetConstructor, out constructorParsePropperties);
             }
 
             if (!hasConstructors)
                 Debug.Log($"Not has Constructors Propperties");
+            else
+                ConverterLog.OutputDictionary(constructorParsePropperties, "Int", "Struct", true);
 
             if (!hasFields)
                 Debug.Log($"Not Has Fields Propperties");
@@ -123,16 +190,23 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             Dictionary<int, FieldsStruct> fieldsParsePropperties;
 
             GetParsingPropperties(targetClass, out constructorsParsePropperties, out fieldsParsePropperties);
-
-            List<string> strings = new();
-
-            for (int s = 0; s < strings.Count; s++)
-                ParseString(strings[s]);
+            ParseString();
         }
 
-        private void ParseString(string str)
+        private void ParseString()
         {
+            parseStrings.Clear();
 
+            if (callbackText == null || callbackText == default)
+                return;
+
+            List<string> lines = new(callbackText.Split(new char[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries));
+
+            for (int l = 0; l < lines.Count; l++)
+            {
+                lines[l].CheckLineForComplexString(out List<string> columns);
+                parseStrings.Add(lines[l], columns.ToArray());
+            }
         }
 
         #endregion
