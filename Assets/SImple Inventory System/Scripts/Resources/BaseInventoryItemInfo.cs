@@ -7,8 +7,33 @@ namespace SimpleResourcesSystem.SimpleInventorySystem
 
     public class BaseInventoryItemInfo
     {
-        [field: SerializeField] public SimpleResourcesItemInfo ItemInfo { get; private set; }
-        [field: SerializeField] public int ItemAmount { get; private set; }
+        private SimpleResourcesItemInfo itemInfo;
+        private int itemAmount;
+
+        [field: SerializeField]
+        public SimpleResourcesItemInfo ItemInfo
+        {
+            get => itemInfo;
+            private set
+            {
+                itemInfo = value;
+                OnItemChanged?.Invoke(itemInfo);
+            }
+        }
+
+        [field: SerializeField]
+        public int ItemAmount
+        {
+            get => itemAmount;
+            private set
+            {
+                if (itemAmount != value)
+                {
+                    itemAmount = Mathf.Clamp(value, 0, int.MaxValue);
+                    OnItemAmountChanged?.Invoke(itemAmount);
+                }
+            }
+        }
 
         public event Action<SimpleResourcesItemInfo> OnItemChanged;
         public event Action<int> OnItemAmountChanged;

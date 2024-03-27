@@ -1,19 +1,16 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using System.Reflection;
 using System.Collections.Generic;
-using System.Linq;
+using SimpleResourcesSystem.SimpleItemSystem;
+using System.Reflection;
 
 namespace SimpleResourcesSystem.ResourceManagementSystem
 {
-    using SimpleItemSystem;
-    using System;
-    using System.Reflection;
+    using FieldsStruct = MarkersStorage<LoadMarkerAttribute, FieldInfo>;
+    using ConstructorsStruct = MarkersStorage<LoadConstructorMarkerAttribute, ConstructorInfo>;
 
     public class ResourcesItemInfoConverterWindow : BaseResourcesConverterWindow
     {
-        private const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-
         [MenuItem("My Tools/Simple Resources Item Info Converter Window")]
         public static void ShowWindow()
         {
@@ -24,49 +21,120 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         {
             base.DisplayGUI();
 
-            if (GUILayout.Button("Draw"))
-                DisplayItem(new[] { new SimpleResourcesItemInfo() });
-
+            if (GUILayout.Button("Parse Text"))
+                ParseText();
+            //GetParsingPropperties(new SimpleResourcesItemInfo());
         }
 
-        private bool GetFieldsParsingPropperties(object targetClass, out List<MarkersStorage<LoadMarkerAttribute, FieldInfo>> markersStorages)
+        #region Propperties Metods
+
+        private bool GetFieldsParsingPropperties(object targetClass, out List<FieldsStruct> markersStorages, bool isSort = true, bool isShowProcess = false)
         {
             markersStorages = new();
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-            Type type = targetClass.GetType();
-            FieldInfo[] fields = type.GetFields(flags);
+            FieldInfo[] fields = targetClass.GetType().GetFields(flags);
 
-            Debug.Log("Fields:");
+            ConverterLog.Log($"Fields: {fields.Length}", isShowProcess);
+
             if (!ConverterSupports.TryGetCustomAttributes(fields, out markersStorages))
                 return false;
 
-            ConverterSupports.OutputMarkersStruct(markersStorages, "Do: Field", "Attribute");
-            markersStorages.Sort((item1, item2) => item1.MarkerAttribute.Column.CompareTo(item2.MarkerAttribute.Column));
-            ConverterSupports.OutputMarkersStruct(markersStorages, "To -> Field", "Attribute");
+            ConverterLog.OutputMarkersStruct(markersStorages, "Do: Field", "Attribute", isShowProcess);
+
+            if (isSort)
+                markersStorages.Sort((item1, item2) => item1.MarkerAttribute.Column.CompareTo(item2.MarkerAttribute.Column));
+
+            ConverterLog.OutputMarkersStruct(markersStorages, "To -> Field", "Attribute", isShowProcess);
 
             return markersStorages.Count > 0;
         }
 
-        private void DisplayItem(object targetClass)
+        private bool GetConstructors(object targetClass, out List<ConstructorsStruct> markersStorages, bool isShowProcess = false)
         {
-            if (GetFieldsParsingPropperties(targetClass, out List<MarkersStorage<LoadMarkerAttribute, FieldInfo>> markersStorages))
+            markersStorages = new();
+            ConstructorInfo[] ctors = targetClass.GetType().GetConstructors();
+
+            bool result = ConverterSupports.TryGetCustomAttributes(ctors, out markersStorages);
+            ConverterLog.OutputConstructorsStruct(markersStorages, isShowProcess);
+
+            return result;
+        }
+
+        private bool GetTargetConstructor(List<ConstructorsStruct> markersStorages, out ConstructorsStruct targetConstructor)
+        {
+            targetConstructor = new();
+            if (markersStorages.Count == 0)
             {
-                Debug.LogError($"Not Get Propperties");
-                return;
+                Debug.LogError($"Constructors List Is Null");
+                return false;
             }
 
-            //for (int x = 0; x < fieldsDictionary.Count; x++)
-            //{
-            //    FieldInfo field = fieldsDictionary.ElementAt(x).Key;
-            //    Debug.Log($"Field Value: {field.GetValue(classes[c])}");  //    value
-            //    Debug.Log($"Field Type: {field.GetValue(classes[c]).GetType()}");  //    type
-            //}
-
-            //for (int x = 0; x < constructorsDictionary.Count; x++)
-            //{
-            //    ConstructorInfo constructor = constructorsDictionary.ElementAt(x).Key;
-            //    //Debug.Log($"Field Value: {constructor.GetValue(classes[c])}");
-            //}
+            return true;
         }
+
+        private void GetConstructorParsingPropperties(ConstructorsStruct targetConstructor, out Dictionary<int, ConstructorsStruct> constructorParsePropperties)
+        {
+            constructorParsePropperties = new();
+        }
+
+        private void GetParsingPropperties(object targetClass, 
+            out Dictionary<int, ConstructorsStruct> constructorParsePropperties,
+            out Dictionary<int, FieldsStruct> fieldsParsePropperties)
+        {
+            constructorParsePropperties = new();
+            fieldsParsePropperties = new();
+
+            bool hasConstructors = GetConstructors(targetClass, out List<ConstructorsStruct> constructorsStorages, true);
+            bool hasFields = GetFieldsParsingPropperties(targetClass, out List<FieldsStruct> fieldsStorages, true);
+
+            if (hasConstructors)
+            {
+                if (GetTargetConstructor(constructorsStorages, out ConstructorsStruct targetConstructor))
+                    hasConstructors = true;
+                else
+                    hasConstructors = false;
+            }
+
+            if (!hasConstructors)
+                Debug.Log($"Not has Constructors Propperties");
+
+            if (!hasFields)
+                Debug.Log($"Not Has Fields Propperties");
+            else
+            {
+                for (int m = 0; m < fieldsStorages.Count; m++)
+                {
+                    fieldsParsePropperties.Add(fieldsStorages[m].MarkerAttribute.Column, fieldsStorages[m]);
+                }
+            }
+
+        }
+
+        #endregion
+
+        #region Parse Metods
+
+        private void ParseText()
+        {
+            Object targetClass = new SimpleResourcesItemInfo();
+
+            Dictionary<int, ConstructorsStruct> constructorsParsePropperties;
+            Dictionary<int, FieldsStruct> fieldsParsePropperties;
+
+            GetParsingPropperties(targetClass, out constructorsParsePropperties, out fieldsParsePropperties);
+
+            List<string> strings = new();
+
+            for (int s = 0; s < strings.Count; s++)
+                ParseString(strings[s]);
+        }
+
+        private void ParseString(string str)
+        {
+
+        }
+
+        #endregion
     }
 }
