@@ -4,7 +4,7 @@ using BaseGoogleSheetLoaderSystem;
 
 namespace SimpleResourcesSystem.ResourceManagementSystem
 {
-    public class BaseResourcesConverterWindow : EditorWindow
+    public class BaseParserWindow : EditorWindow
     {
         protected static string titleContent;
         protected static string callbackText;
@@ -20,10 +20,13 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             window.titleContent = new GUIContent(windowTitleContent);
             titleContent = windowTitleContent;
 
+            window.maxSize = new Vector2(450, 800f);
+            window.minSize = window.maxSize;
+
             Reconnect();
         }
 
-        private static void Reconnect()
+        protected static void Reconnect()
         {
             GoogleSheetLoaderWindow.LoadCallback -= SimpleResourcesGoogleSheetConverterWindow_LoadCallback;
 
@@ -43,14 +46,15 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         protected virtual void DisplayGUI()
         {
+            GUILayout.Space(5);
             GUILayout.Label(titleContent, GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
 
-            GUILayout.Space(10);
+            GUILayout.Space(5);
 
             GUILayout.BeginVertical("HelpBox");
             GUILayout.Space(5);
 
-            if (GUILayout.Button("Reconect To Loader"))
+            if (GUILayout.Button("Reconnect To Loader"))
                 Reconnect();
 
             GUILayout.Space(5);

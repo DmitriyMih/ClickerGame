@@ -10,48 +10,213 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
     using FieldsStruct = MarkersStorage<LoadMarkerAttribute, FieldInfo>;
     using ConstructorsStruct = MarkersStorage<LoadConstructorMarkerAttribute, ConstructorInfo>;
 
-    public class ResourcesItemInfoConverterWindow : BaseResourcesConverterWindow
+    public class SimpleGoogleSheetsParserWindow : BaseParserWindow
     {
+        const string publisherUrl = "https://assetstore.unity.com/publishers/98518?preview=1";
+
+        const string windowTitle = "Simple Google Sheets Parser";
+        const string headerPath = "Assets/BaseGoogleSheetLoader/System/ParserHeader.png";
+        const string iconPath = "Assets/BaseGoogleSheetLoader/System/LogoIcon.png";
+
+        Color backgroundColor = new Color(1f, 0.96f, 0.84f, 1f);
+
+        int widthOffcetLeft = 65;
+        int widthOffcetRight = 10;
+
+        int headerHeight = 75;
+        int heightOffcet = 5;
+
+        Texture2D IconTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+        Texture2D LogoTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(headerPath);
+
         Dictionary<string, string[]> parseStrings = new();
-        public Vector2 scrollPosition = Vector2.zero;
+
+        private Vector2 mainScrollPosition = Vector2.zero;
+
+        private Vector2 sheetOutputScrollPosition = Vector2.zero;
+        private Vector2 sheetItemsScrollPosition = Vector2.zero;
+
+        private bool isShowSheetOutput = false;
+        private bool isShowSheetItems = false;
+
+        private Object tempObject;
+        private Object targetObject;
+
+        Dictionary<int, ConstructorsStruct> constructorsParsePropperties;
+        Dictionary<int, FieldsStruct> fieldsParsePropperties;
+
+        public SimpleGoogleSheetsParserWindow()
+        {
+            titleContent = windowTitle;
+        }
 
         [MenuItem("My Tools/Simple Resources Item Info Converter Window")]
         public static void ShowWindow()
         {
-            OpenWindow<ResourcesItemInfoConverterWindow>("Simple Resources Converter");
+            OpenWindow<SimpleGoogleSheetsParserWindow>(windowTitle);
         }
 
         protected override void DisplayGUI()
         {
-            base.DisplayGUI();
+            DrawLogo();
 
-            if (GUILayout.Button("Parse Text"))
-                ParseText();
+            GUILayout.Space(85);
 
-            Output();
+            DisplayReconnect();
+
+            mainScrollPosition = EditorGUILayout.BeginScrollView(mainScrollPosition);
+
+            Display();
+
+            EditorGUILayout.EndScrollView();
         }
 
-        private void Output()
+        private void DisplayReconnect()
         {
+            GUILayout.BeginVertical("HelpBox");
+            GUILayout.Space(5);
+
+            if (GUILayout.Button("Reconect To Loader"))
+                Reconnect();
+
+            GUILayout.Space(5);
+            GUILayout.EndVertical();
+        }
+
+        private void DrawLogo()
+        {
+            Rect headerBackground = new Rect(0, 0, Screen.width, Screen.height);
+
+            Texture2D tex = new Texture2D(1, 1);
+            tex.SetPixel(0, 0, backgroundColor);
+            tex.Apply();
+            GUI.DrawTexture(headerBackground, tex);
+
+            Rect headerRect = new Rect(widthOffcetLeft, heightOffcet, Screen.width - widthOffcetRight - widthOffcetLeft, headerHeight - heightOffcet * 2);
+            GUI.DrawTexture(headerRect, LogoTexture, ScaleMode.ScaleToFit);
+
+            Rect rect = new Rect(5, (headerHeight - 60) / 2, 60, 60);
+
+            GUI.DrawTexture(rect, IconTexture);
+            if (GUI.Button(rect, "", new GUIStyle()))
+                Application.OpenURL(publisherUrl);
+        }
+
+        private void Display()
+        {
+            GUILayout.Space(10);
+
+            #region Propperties Logic
+
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.Space(5);
+
+            //GUI.contentColor = Color.black;
+            targetObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
+
+            if (targetObject != null && GUILayout.Button("Get Parsing Propperties"))
+            {
+                GetParsingPropperties(targetObject, out constructorsParsePropperties, out fieldsParsePropperties);
+                tempObject = targetObject;
+            }
+
+            GUILayout.Space(5);
+            GUILayout.EndVertical();
+
+            #endregion
+
+            #region Parsing And Output Logic
+
+            GUILayout.Space(10);
+
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.Space(5f);
+
             if (callbackText != null && callbackText != "")
-                GUILayout.Label(callbackText, GetStyle(TextAnchor.MiddleLeft, FontStyle.Bold));
+            {
+                DisplaySheetOutput();
+
+                GUILayout.Space(10);
+
+                if (GUILayout.Button("Parse Output To Items"))
+                    ParseText();
+            }
+
+            if (GUILayout.Button("Clear Parse Strings"))
+                parseStrings.Clear();
+
+            GUILayout.Space(5);
+            GUILayout.EndVertical();
 
             if (parseStrings.Count == 0)
                 return;
 
             GUILayout.Space(10);
 
-            if(GUILayout.Button("Clear Parse Strings"))
-                parseStrings.Clear();
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.Space(5);
 
-            GUILayout.Space(10);
+            DisplaySheetItems();
 
-            GUILayout.BeginVertical("HelpBox");
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+            GUILayout.Space(5);
+            GUILayout.EndVertical();
+
+            #endregion
+        }
+
+        private void DisplaySheetOutput()
+        {
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.black;
+
+            isShowSheetOutput = GUILayout.Toggle(isShowSheetOutput, "Show Sheet Output");
+
+            GUILayout.Space(5);
+
+            if (!isShowSheetOutput)
+            {
+                GUI.backgroundColor = Color.white;
+                GUI.contentColor = Color.white;
+                return;
+            }
+
+            GUILayout.BeginHorizontal(EditorStyles.helpBox);
+            GUILayout.Space(5f);
+
+            sheetOutputScrollPosition = EditorGUILayout.BeginScrollView(sheetOutputScrollPosition, GUILayout.Height(100));
+
+            GUILayout.Label(callbackText, GetStyle(TextAnchor.MiddleLeft, FontStyle.Normal));
+
+            EditorGUILayout.EndScrollView();
+
+            GUILayout.Space(5f);
+            GUILayout.EndHorizontal();
+
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.white;
+        }
+
+        private void DisplaySheetItems()
+        {
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.black;
+
+            isShowSheetItems = GUILayout.Toggle(isShowSheetItems, "Show Sheet Parsing Items");
+
+            if (!isShowSheetItems)
+            {
+                GUI.backgroundColor = Color.white;
+                GUI.contentColor = Color.white;
+                return;
+            }
+
+            GUILayout.Space(5);
+
+            sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition);
 
             for (int l = 0; l < parseStrings.Count; l++)
             {
-                GUILayout.BeginVertical("HelpBox");
+                GUILayout.BeginVertical(EditorStyles.helpBox);
                 GUILayout.Space(2.5f);
 
                 string[] rows = parseStrings.ElementAt(l).Value;
@@ -66,9 +231,9 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             }
 
             EditorGUILayout.EndScrollView();
-            GUILayout.EndVertical();
 
-            GUILayout.FlexibleSpace();
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.white;
         }
 
         #region Propperties Metods
@@ -184,12 +349,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         private void ParseText()
         {
-            Object targetClass = new SimpleResourcesItemInfo();
-
-            Dictionary<int, ConstructorsStruct> constructorsParsePropperties;
-            Dictionary<int, FieldsStruct> fieldsParsePropperties;
-
-            GetParsingPropperties(targetClass, out constructorsParsePropperties, out fieldsParsePropperties);
+            //GetParsingPropperties(targetClass, out constructorsParsePropperties, out fieldsParsePropperties);
             ParseString();
         }
 
