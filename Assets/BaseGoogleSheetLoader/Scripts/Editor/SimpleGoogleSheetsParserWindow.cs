@@ -33,17 +33,19 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         private Vector2 mainScrollPosition = Vector2.zero;
 
+        private Vector2 outputProppertiesScrollPosition = Vector2.zero;
         private Vector2 sheetOutputScrollPosition = Vector2.zero;
         private Vector2 sheetItemsScrollPosition = Vector2.zero;
 
+        private bool isParsingProppetiesOutput = false;
         private bool isShowSheetOutput = false;
         private bool isShowSheetItems = false;
 
         private Object tempObject;
         private Object targetObject;
 
-        Dictionary<int, ConstructorsStruct> constructorsParsePropperties;
-        Dictionary<int, FieldsStruct> fieldsParsePropperties;
+        Dictionary<int, ConstructorsStruct> constructorsParsePropperties = new();
+        Dictionary<int, FieldsStruct> fieldsParsePropperties = new();
 
         public SimpleGoogleSheetsParserWindow()
         {
@@ -66,7 +68,9 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             mainScrollPosition = EditorGUILayout.BeginScrollView(mainScrollPosition);
 
-            Display();
+            ContentDisplay();
+
+            GUILayout.Space(10);
 
             EditorGUILayout.EndScrollView();
         }
@@ -102,66 +106,160 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 Application.OpenURL(publisherUrl);
         }
 
-        private void Display()
+        private void DisplayOutput(bool hasCallbackText)
         {
-            GUILayout.Space(10);
+            if (hasCallbackText)
+            {
+                GUILayout.Space(10);
 
-            #region Propperties Logic
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.Space(5f);
 
+                DisplaySheetOutput();
+
+                GUILayout.Space(5f);
+                GUILayout.EndVertical();
+            }
+        }
+
+        private void ProppertiesDisplay()
+        {
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.Space(5);
 
-            //GUI.contentColor = Color.black;
-            targetObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
-
-            if (targetObject != null && GUILayout.Button("Get Parsing Propperties"))
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Get Parsing Propperties") && targetObject != null)
             {
                 GetParsingPropperties(targetObject, out constructorsParsePropperties, out fieldsParsePropperties);
                 tempObject = targetObject;
             }
 
+            targetObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
+
+            GUILayout.EndHorizontal();
+
+            if (GUILayout.Button("Clear Parsing Propperties"))
+            {
+                constructorsParsePropperties.Clear();
+                fieldsParsePropperties.Clear();
+            }
+
+            OutputParsingPropperties();
+
             GUILayout.Space(5);
             GUILayout.EndVertical();
+        }
 
-            #endregion
+        private void OutputParsingPropperties()
+        {
+            if (constructorsParsePropperties.Count == 0 && fieldsParsePropperties.Count == 0)
+                return;
 
-            #region Parsing And Output Logic
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.black;
 
-            GUILayout.Space(10);
+            GUILayout.Space(5);
 
-            GUILayout.BeginVertical(EditorStyles.helpBox);
-            GUILayout.Space(5f);
+            isParsingProppetiesOutput = GUILayout.Toggle(isParsingProppetiesOutput, "Show Parsing Propperties Output");
 
-            if (callbackText != null && callbackText != "")
+            if (!isParsingProppetiesOutput)
             {
-                DisplaySheetOutput();
+                GUI.backgroundColor = Color.white;
+                GUI.contentColor = Color.white;
+                return;
+            }
 
-                GUILayout.Space(10);
+            GUILayout.Space(5);
+
+            GUILayout.BeginVertical();
+            outputProppertiesScrollPosition = EditorGUILayout.BeginScrollView(outputProppertiesScrollPosition, GUILayout.MinHeight(120));
+
+            if (constructorsParsePropperties.Count > 0)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.Space(5);
+
+                GUILayout.Label($"Constructor Propperties", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+
+                GUILayout.Space(5);
+
+                DisplayConstructorPropperties(constructorsParsePropperties);
+
+                GUILayout.Space(5);
+                GUILayout.EndHorizontal();
+            }
+
+            if (fieldsParsePropperties.Count > 0)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.Space(5);
+
+                GUILayout.Label($"Fields Propperties", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+
+                GUILayout.Space(5);
+
+                DisplayFieldsPropperties(fieldsParsePropperties);
+
+                GUILayout.Space(5);
+                GUILayout.EndHorizontal();
+
+            }
+
+            EditorGUILayout.EndScrollView();
+            GUILayout.EndVertical();
+
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.white;
+        }
+
+        private void DisplayConstructorPropperties(Dictionary<int, ConstructorsStruct> propperties)
+        {
+            //Tyt
+            for (int i = 0; i < propperties.Count; i++)
+                GUILayout.Label($"{"Element"} {i}: {propperties.ElementAt(i).Value.MarkerAttribute} | {"Value"}: {propperties.ElementAt(i).Value.MemberInfo}");
+        }
+
+        private void DisplayFieldsPropperties(Dictionary<int, FieldsStruct> propperties)
+        {
+            //Tyt
+            for (int i = 0; i < propperties.Count; i++)
+                GUILayout.Label($"{"Element"} {i}: {propperties.ElementAt(i).Value.MarkerAttribute} | {"Value"}: {propperties.ElementAt(i).Value.MemberInfo}");
+        }
+
+        private void OutputParsingDisplay(bool hasCallbackText)
+        {
+            if (hasCallbackText)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.Space(5);
 
                 if (GUILayout.Button("Parse Output To Items"))
                     ParseText();
+
+                if (GUILayout.Button("Clear Parse Strings"))
+                    parseStrings.Clear();
+
+                if (parseStrings.Count != 0)
+                    DisplaySheetItems();
+
+                GUILayout.Space(5);
+                GUILayout.EndVertical();
             }
+        }
 
-            if (GUILayout.Button("Clear Parse Strings"))
-                parseStrings.Clear();
+        private void ContentDisplay()
+        {
+            bool hasCallbackText = callbackText != null && callbackText != "";
 
-            GUILayout.Space(5);
-            GUILayout.EndVertical();
-
-            if (parseStrings.Count == 0)
-                return;
+            DisplayOutput(hasCallbackText);
 
             GUILayout.Space(10);
 
-            GUILayout.BeginVertical(EditorStyles.helpBox);
-            GUILayout.Space(5);
+            ProppertiesDisplay();
 
-            DisplaySheetItems();
+            GUILayout.Space(10);
 
-            GUILayout.Space(5);
-            GUILayout.EndVertical();
-
-            #endregion
+            OutputParsingDisplay(hasCallbackText);
         }
 
         private void DisplaySheetOutput()
@@ -171,8 +269,6 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             isShowSheetOutput = GUILayout.Toggle(isShowSheetOutput, "Show Sheet Output");
 
-            GUILayout.Space(5);
-
             if (!isShowSheetOutput)
             {
                 GUI.backgroundColor = Color.white;
@@ -180,17 +276,15 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 return;
             }
 
-            GUILayout.BeginHorizontal(EditorStyles.helpBox);
-            GUILayout.Space(5f);
+            GUILayout.Space(5);
 
+            GUILayout.BeginVertical(EditorStyles.helpBox);
             sheetOutputScrollPosition = EditorGUILayout.BeginScrollView(sheetOutputScrollPosition, GUILayout.Height(100));
 
-            GUILayout.Label(callbackText, GetStyle(TextAnchor.MiddleLeft, FontStyle.Normal));
+            GUILayout.Label(callbackText);
 
             EditorGUILayout.EndScrollView();
-
-            GUILayout.Space(5f);
-            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
 
             GUI.backgroundColor = Color.white;
             GUI.contentColor = Color.white;
@@ -200,6 +294,8 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         {
             GUI.backgroundColor = Color.white;
             GUI.contentColor = Color.black;
+
+            GUILayout.Space(5);
 
             isShowSheetItems = GUILayout.Toggle(isShowSheetItems, "Show Sheet Parsing Items");
 
@@ -212,7 +308,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             GUILayout.Space(5);
 
-            sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition);
+            sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.MinHeight(200));
 
             for (int l = 0; l < parseStrings.Count; l++)
             {

@@ -6,7 +6,7 @@ public class LoadConstructorMarkerAttribute : Attribute
 {
     public ConstructorInfo ConstructorInfo { get; private set; }
     public int[] Columns { get; private set; }
-    public object[] ConstructorArguments;
+    public object[] ConstructorArguments { get; private set; }
 
     public LoadConstructorMarkerAttribute(params int[] columns) { Columns = columns; }
 
