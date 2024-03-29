@@ -44,7 +44,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         private Object tempObject;
         private Object targetObject;
 
-        Dictionary<int, ConstructorsStruct> constructorsParsePropperties = new();
+        ConstructorsStruct constructorsParsePropperties = new();
         Dictionary<int, FieldsStruct> fieldsParsePropperties = new();
 
         public SimpleGoogleSheetsParserWindow()
@@ -140,7 +140,9 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             if (GUILayout.Button("Clear Parsing Propperties"))
             {
-                constructorsParsePropperties.Clear();
+                constructorsParsePropperties.MarkerAttribute = null;
+                constructorsParsePropperties.MemberInfo = null;
+
                 fieldsParsePropperties.Clear();
             }
 
@@ -152,7 +154,8 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         private void OutputParsingPropperties()
         {
-            if (constructorsParsePropperties.Count == 0 && fieldsParsePropperties.Count == 0)
+            if (constructorsParsePropperties.MarkerAttribute == null && constructorsParsePropperties.MemberInfo == null
+                && fieldsParsePropperties.Count == 0)
                 return;
 
             GUI.backgroundColor = Color.white;
@@ -172,14 +175,14 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             GUILayout.Space(5);
 
             GUILayout.BeginVertical();
-            outputProppertiesScrollPosition = EditorGUILayout.BeginScrollView(outputProppertiesScrollPosition, GUILayout.MinHeight(120));
+            outputProppertiesScrollPosition = EditorGUILayout.BeginScrollView(outputProppertiesScrollPosition, GUILayout.MinHeight(100), GUILayout.MaxHeight(185)); //120
 
-            if (constructorsParsePropperties.Count > 0)
+            if (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null)
             {
                 GUILayout.BeginVertical(EditorStyles.helpBox);
                 GUILayout.Space(5);
 
-                GUILayout.Label($"Constructor Propperties", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+                GUILayout.Label($"Constructor Propperties: {constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
 
                 GUILayout.Space(5);
 
@@ -194,7 +197,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 GUILayout.BeginVertical(EditorStyles.helpBox);
                 GUILayout.Space(5);
 
-                GUILayout.Label($"Fields Propperties", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+                GUILayout.Label($"Fields Propperties: {fieldsParsePropperties.Count}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
 
                 GUILayout.Space(5);
 
@@ -202,7 +205,6 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
                 GUILayout.Space(5);
                 GUILayout.EndHorizontal();
-
             }
 
             EditorGUILayout.EndScrollView();
@@ -212,18 +214,21 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             GUI.contentColor = Color.white;
         }
 
-        private void DisplayConstructorPropperties(Dictionary<int, ConstructorsStruct> propperties)
+        private void DisplayConstructorPropperties(ConstructorsStruct propperties)
         {
-            //Tyt
-            for (int i = 0; i < propperties.Count; i++)
-                GUILayout.Label($"{"Element"} {i}: {propperties.ElementAt(i).Value.MarkerAttribute} | {"Value"}: {propperties.ElementAt(i).Value.MemberInfo}");
+            LoadConstructorMarkerAttribute attribute = propperties.MarkerAttribute;
+
+            for (int i = 0; i < attribute.ArgumentsInfos.Length; i++)
+                GUILayout.Label($"Element {i} | Type: {attribute.ArgumentsInfos[i].ParameterType} / Column: {attribute.Columns[i]} / Name: {attribute.ArgumentsInfos[i].Name}");
         }
 
         private void DisplayFieldsPropperties(Dictionary<int, FieldsStruct> propperties)
         {
-            //Tyt
             for (int i = 0; i < propperties.Count; i++)
-                GUILayout.Label($"{"Element"} {i}: {propperties.ElementAt(i).Value.MarkerAttribute} | {"Value"}: {propperties.ElementAt(i).Value.MemberInfo}");
+            {
+                LoadMarkerAttribute attribute = propperties.ElementAt(i).Value.MarkerAttribute;
+                GUILayout.Label($"Element {i} | Type: {attribute.FieldArgument} / Column: {attribute.Column}");
+            }
         }
 
         private void OutputParsingDisplay(bool hasCallbackText)
@@ -334,7 +339,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         #region Propperties Metods
 
-        private bool GetFieldsParsingPropperties(object targetClass, out List<FieldsStruct> markersStorages, bool isSort = true, bool isShowProcess = false)
+        private bool GetFields(object targetClass, out List<FieldsStruct> markersStorages, bool isSort = true, bool isShowProcess = false)
         {
             markersStorages = new();
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
@@ -345,6 +350,9 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             if (!ConverterSupports.TryGetCustomAttributes(fields, out markersStorages))
                 return false;
+
+            for (int m = 0; m < markersStorages.Count; m++)
+                markersStorages[m].MarkerAttribute.Initialization(markersStorages[m].MemberInfo, markersStorages[m].MemberInfo.GetValue(targetClass).GetType());
 
             ConverterLog.OutputMarkersStruct(markersStorages, "Do: Field", "Attribute", isShowProcess);
 
@@ -358,10 +366,9 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         private bool GetConstructors(object targetClass, out List<ConstructorsStruct> markersStorages, bool isShowProcess = false)
         {
-            markersStorages = new();
             ConstructorInfo[] ctors = targetClass.GetType().GetConstructors();
-
             bool result = ConverterSupports.TryGetCustomAttributes(ctors, out markersStorages);
+
             ConverterLog.OutputConstructorsStruct(markersStorages, isShowProcess);
 
             return result;
@@ -383,49 +390,30 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             ConverterLog.OutputConstructorsStruct(markersStorages, true);
 
             targetConstructor = markersStorages[0];
+
+            ParameterInfo[] parameters = targetConstructor.MemberInfo.GetParameters();
+            targetConstructor.MarkerAttribute.Initialization(targetConstructor.MemberInfo, parameters);
+
             return targetConstructor.MarkerAttribute != null;
         }
 
-        private bool GetConstructorParsingPropperties(ConstructorsStruct targetConstructor, out Dictionary<int, ConstructorsStruct> constructorParsePropperties)
-        {
-            constructorParsePropperties = new();
-
-            for (int c = 0; c < targetConstructor.MarkerAttribute.Columns.Length; c++)
-            {
-                if (constructorParsePropperties.ContainsKey(targetConstructor.MarkerAttribute.Columns[c]))
-                {
-                    Debug.LogError($"Marker Has Already Column {targetConstructor.MarkerAttribute.Columns[c]} In Constructor: {targetConstructor.MemberInfo} | Object: {targetConstructor.MarkerAttribute}");
-                    return false;
-                }
-
-                constructorParsePropperties.Add(targetConstructor.MarkerAttribute.Columns[c], targetConstructor);
-            }
-
-            return constructorParsePropperties.Count > 0;
-        }
-
         private void GetParsingPropperties(object targetClass,
-            out Dictionary<int, ConstructorsStruct> constructorParsePropperties,
+            out ConstructorsStruct constructorParsePropperties,
             out Dictionary<int, FieldsStruct> fieldsParsePropperties)
         {
             constructorParsePropperties = new();
             fieldsParsePropperties = new();
 
             bool hasConstructors = GetConstructors(targetClass, out List<ConstructorsStruct> constructorsStorages, true);
-            bool hasFields = GetFieldsParsingPropperties(targetClass, out List<FieldsStruct> fieldsStorages, true);
+            bool hasFields = GetFields(targetClass, out List<FieldsStruct> fieldsStorages, true);
 
             if (hasConstructors)
-            {
-                hasConstructors = GetTargetConstructor(constructorsStorages, out ConstructorsStruct targetConstructor);
-
-                if (hasConstructors)
-                    hasConstructors = GetConstructorParsingPropperties(targetConstructor, out constructorParsePropperties);
-            }
+                hasConstructors = GetTargetConstructor(constructorsStorages, out constructorParsePropperties);
 
             if (!hasConstructors)
                 Debug.Log($"Not has Constructors Propperties");
             else
-                ConverterLog.OutputDictionary(constructorParsePropperties, "Int", "Struct", true);
+                ConverterLog.OutputConstructorStruct(constructorParsePropperties, true);
 
             if (!hasFields)
                 Debug.Log($"Not Has Fields Propperties");

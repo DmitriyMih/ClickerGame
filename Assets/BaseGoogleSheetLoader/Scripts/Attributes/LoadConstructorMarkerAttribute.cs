@@ -6,13 +6,19 @@ public class LoadConstructorMarkerAttribute : Attribute
 {
     public ConstructorInfo ConstructorInfo { get; private set; }
     public int[] Columns { get; private set; }
-    public object[] ConstructorArguments { get; private set; }
+
+    public ParameterInfo[] ArgumentsInfos { get; private set; }
 
     public LoadConstructorMarkerAttribute(params int[] columns) { Columns = columns; }
 
-    public void Initialization(ConstructorInfo constructorInfo, object[] constructorArguments)
+    public void Initialization(ConstructorInfo constructorInfo, ParameterInfo[] argumentsInfos)
     {
         ConstructorInfo = constructorInfo;
-        ConstructorArguments = constructorArguments;
+        ArgumentsInfos = argumentsInfos;
+
+        UnityEngine.Debug.Log($"Constructor Info: {constructorInfo}");
+
+        for (int i = 0; i < argumentsInfos.Length; i++)
+            UnityEngine.Debug.Log($"Argument Info {i}: {argumentsInfos[i]}");
     }
 }

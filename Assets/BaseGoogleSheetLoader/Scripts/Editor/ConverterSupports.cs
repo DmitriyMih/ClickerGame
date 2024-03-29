@@ -172,6 +172,15 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 ConverterLog.Log($"{markers[i].MarkerAttribute.Column} | {memberTitle}: {markers[i].MemberInfo} / {ttributeTitle}: {markers[i].MarkerAttribute}");
         }
 
+        public static void OutputConstructorStruct(ConstructorsStruct marker, bool isShow = true)
+        {
+                ConverterLog.Log($"Constructor: {marker.MemberInfo} / {marker.MarkerAttribute.Columns}");
+                ParameterInfo[] parameters = marker.MemberInfo.GetParameters();
+
+                for (int p = 0; p < parameters.Length; p++)
+                    ConverterLog.Log($"Param {parameters[p].Position} is named {parameters[p].Name} and is of type {parameters[p].ParameterType}");
+        }
+
         public static void OutputConstructorsStruct(List<ConstructorsStruct> markers, bool isShow = true)
         {
             for (int m = 0; m < markers.Count; m++)
