@@ -58,34 +58,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             OpenWindow<SimpleGoogleSheetsParserWindow>(windowTitle);
         }
 
-        protected override void DisplayGUI()
-        {
-            DrawLogo();
-
-            GUILayout.Space(85);
-
-            DisplayReconnect();
-
-            mainScrollPosition = EditorGUILayout.BeginScrollView(mainScrollPosition);
-
-            ContentDisplay();
-
-            GUILayout.Space(10);
-
-            EditorGUILayout.EndScrollView();
-        }
-
-        private void DisplayReconnect()
-        {
-            GUILayout.BeginVertical("HelpBox");
-            GUILayout.Space(5);
-
-            if (GUILayout.Button("Reconect To Loader"))
-                Reconnect();
-
-            GUILayout.Space(5);
-            GUILayout.EndVertical();
-        }
+        #region Draw Header
 
         private void DrawLogo()
         {
@@ -106,151 +79,38 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 Application.OpenURL(publisherUrl);
         }
 
-        private void DisplayOutput(bool hasCallbackText)
+        private void DisplayReconnect()
         {
-            if (hasCallbackText)
-            {
-                GUILayout.Space(10);
-
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-                GUILayout.Space(5f);
-
-                DisplaySheetOutput();
-
-                GUILayout.Space(5f);
-                GUILayout.EndVertical();
-            }
-        }
-
-        private void ProppertiesDisplay()
-        {
-            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.BeginVertical("HelpBox");
             GUILayout.Space(5);
 
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Get Parsing Propperties") && targetObject != null)
-            {
-                GetParsingPropperties(targetObject, out constructorsParsePropperties, out fieldsParsePropperties);
-                tempObject = targetObject;
-            }
-
-            targetObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
-
-            GUILayout.EndHorizontal();
-
-            if (GUILayout.Button("Clear Parsing Propperties"))
-            {
-                constructorsParsePropperties.MarkerAttribute = null;
-                constructorsParsePropperties.MemberInfo = null;
-
-                fieldsParsePropperties.Clear();
-            }
-
-            OutputParsingPropperties();
+            if (GUILayout.Button("Reconect To Loader"))
+                Reconnect();
 
             GUILayout.Space(5);
             GUILayout.EndVertical();
         }
 
-        private void OutputParsingPropperties()
+        #endregion
+
+        protected override void DisplayGUI()
         {
-            if (constructorsParsePropperties.MarkerAttribute == null && constructorsParsePropperties.MemberInfo == null
-                && fieldsParsePropperties.Count == 0)
-                return;
+            DrawLogo();
 
-            GUI.backgroundColor = Color.white;
-            GUI.contentColor = Color.black;
+            GUILayout.Space(85);
 
-            GUILayout.Space(5);
+            DisplayReconnect();
 
-            isParsingProppetiesOutput = GUILayout.Toggle(isParsingProppetiesOutput, "Show Parsing Propperties Output");
+            mainScrollPosition = EditorGUILayout.BeginScrollView(mainScrollPosition);
 
-            if (!isParsingProppetiesOutput)
-            {
-                GUI.backgroundColor = Color.white;
-                GUI.contentColor = Color.white;
-                return;
-            }
+            ContentDisplay();
 
-            GUILayout.Space(5);
-
-            GUILayout.BeginVertical();
-            outputProppertiesScrollPosition = EditorGUILayout.BeginScrollView(outputProppertiesScrollPosition, GUILayout.MinHeight(100), GUILayout.MaxHeight(185)); //120
-
-            if (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null)
-            {
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-                GUILayout.Space(5);
-
-                GUILayout.Label($"Constructor Propperties: {constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
-
-                GUILayout.Space(5);
-
-                DisplayConstructorPropperties(constructorsParsePropperties);
-
-                GUILayout.Space(5);
-                GUILayout.EndHorizontal();
-            }
-
-            if (fieldsParsePropperties.Count > 0)
-            {
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-                GUILayout.Space(5);
-
-                GUILayout.Label($"Fields Propperties: {fieldsParsePropperties.Count}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
-
-                GUILayout.Space(5);
-
-                DisplayFieldsPropperties(fieldsParsePropperties);
-
-                GUILayout.Space(5);
-                GUILayout.EndHorizontal();
-            }
+            GUILayout.Space(10);
 
             EditorGUILayout.EndScrollView();
-            GUILayout.EndVertical();
-
-            GUI.backgroundColor = Color.white;
-            GUI.contentColor = Color.white;
         }
 
-        private void DisplayConstructorPropperties(ConstructorsStruct propperties)
-        {
-            LoadConstructorMarkerAttribute attribute = propperties.MarkerAttribute;
-
-            for (int i = 0; i < attribute.ArgumentsInfos.Length; i++)
-                GUILayout.Label($"Element {i} | Type: {attribute.ArgumentsInfos[i].ParameterType} / Column: {attribute.Columns[i]} / Name: {attribute.ArgumentsInfos[i].Name}");
-        }
-
-        private void DisplayFieldsPropperties(Dictionary<int, FieldsStruct> propperties)
-        {
-            for (int i = 0; i < propperties.Count; i++)
-            {
-                LoadMarkerAttribute attribute = propperties.ElementAt(i).Value.MarkerAttribute;
-                GUILayout.Label($"Element {i} | Type: {attribute.FieldArgument} / Column: {attribute.Column}");
-            }
-        }
-
-        private void OutputParsingDisplay(bool hasCallbackText)
-        {
-            if (hasCallbackText)
-            {
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-                GUILayout.Space(5);
-
-                if (GUILayout.Button("Parse Output To Items"))
-                    ParseText();
-
-                if (GUILayout.Button("Clear Parse Strings"))
-                    parseStrings.Clear();
-
-                if (parseStrings.Count != 0)
-                    DisplaySheetItems();
-
-                GUILayout.Space(5);
-                GUILayout.EndVertical();
-            }
-        }
+        #region Main Display
 
         private void ContentDisplay()
         {
@@ -267,6 +127,27 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             OutputParsingDisplay(hasCallbackText);
         }
 
+        #endregion
+
+        #region Main Display/Block 1
+
+        private void DisplayOutput(bool hasCallbackText)
+        {
+            if (hasCallbackText)
+            {
+                GUILayout.Space(10);
+
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.Space(5f);
+
+                DisplaySheetOutput();
+
+                GUILayout.Space(5f);
+                GUILayout.EndVertical();
+            }
+        }
+
+        //  1.1
         private void DisplaySheetOutput()
         {
             GUI.backgroundColor = Color.white;
@@ -295,108 +176,42 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             GUI.contentColor = Color.white;
         }
 
-        private void DisplaySheetItems()
-        {
-            GUI.backgroundColor = Color.white;
-            GUI.contentColor = Color.black;
+        #endregion
 
+        #region Main Display/Block 2
+
+        private void ProppertiesDisplay()
+        {
+            //GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(false));
+            GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.Space(5);
 
-            isShowSheetItems = GUILayout.Toggle(isShowSheetItems, "Show Sheet Parsing Items");
-
-            if (!isShowSheetItems)
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Get Parsing Propperties") && targetObject != null)
             {
-                GUI.backgroundColor = Color.white;
-                GUI.contentColor = Color.white;
-                return;
+                GetParsingPropperties(targetObject, out constructorsParsePropperties, out fieldsParsePropperties);
+                tempObject = targetObject;
             }
+
+            targetObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
+
+            GUILayout.EndHorizontal();
+
+            if (GUILayout.Button("Clear Parsing Propperties"))
+            {
+                constructorsParsePropperties.MarkerAttribute = null;
+                constructorsParsePropperties.MemberInfo = null;
+
+                fieldsParsePropperties.Clear();
+            }
+
+            OutputParsingPropperties();
 
             GUILayout.Space(5);
-
-            sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.MinHeight(200));
-
-            for (int l = 0; l < parseStrings.Count; l++)
-            {
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-                GUILayout.Space(2.5f);
-
-                string[] rows = parseStrings.ElementAt(l).Value;
-                GUILayout.Label($"Line: {l} | Columns: {rows.Length}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
-                GUILayout.Space(2.5f);
-
-                for (int r = 0; r < rows.Length; r++)
-                    GUILayout.Label($"Column: {r} | {rows[r]}");
-
-                GUILayout.Space(5);
-                GUILayout.EndVertical();
-            }
-
-            EditorGUILayout.EndScrollView();
-
-            GUI.backgroundColor = Color.white;
-            GUI.contentColor = Color.white;
+            GUILayout.EndVertical();
         }
 
-        #region Propperties Metods
-
-        private bool GetFields(object targetClass, out List<FieldsStruct> markersStorages, bool isSort = true, bool isShowProcess = false)
-        {
-            markersStorages = new();
-            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-
-            FieldInfo[] fields = targetClass.GetType().GetFields(flags);
-
-            ConverterLog.Log($"Fields: {fields.Length}", isShowProcess);
-
-            if (!ConverterSupports.TryGetCustomAttributes(fields, out markersStorages))
-                return false;
-
-            for (int m = 0; m < markersStorages.Count; m++)
-                markersStorages[m].MarkerAttribute.Initialization(markersStorages[m].MemberInfo, markersStorages[m].MemberInfo.GetValue(targetClass).GetType());
-
-            ConverterLog.OutputMarkersStruct(markersStorages, "Do: Field", "Attribute", isShowProcess);
-
-            if (isSort)
-                markersStorages.Sort((item1, item2) => item1.MarkerAttribute.Column.CompareTo(item2.MarkerAttribute.Column));
-
-            ConverterLog.OutputMarkersStruct(markersStorages, "To -> Field", "Attribute", isShowProcess);
-
-            return markersStorages.Count > 0;
-        }
-
-        private bool GetConstructors(object targetClass, out List<ConstructorsStruct> markersStorages, bool isShowProcess = false)
-        {
-            ConstructorInfo[] ctors = targetClass.GetType().GetConstructors();
-            bool result = ConverterSupports.TryGetCustomAttributes(ctors, out markersStorages);
-
-            ConverterLog.OutputConstructorsStruct(markersStorages, isShowProcess);
-
-            return result;
-        }
-
-        private bool GetTargetConstructor(List<ConstructorsStruct> markersStorages, out ConstructorsStruct targetConstructor)
-        {
-            targetConstructor = new();
-            if (markersStorages.Count == 0)
-            {
-                Debug.LogError($"Constructors List Is Null");
-                return false;
-            }
-
-            ConverterLog.OutputConstructorsStruct(markersStorages, true);
-
-            markersStorages.Sort((item1, item2) => item2.MarkerAttribute.Columns.Length.CompareTo(item1.MarkerAttribute.Columns.Length));
-
-            ConverterLog.OutputConstructorsStruct(markersStorages, true);
-
-            targetConstructor = markersStorages[0];
-
-            ParameterInfo[] parameters = targetConstructor.MemberInfo.GetParameters();
-            targetConstructor.MarkerAttribute.Initialization(targetConstructor.MemberInfo, parameters);
-
-            return targetConstructor.MarkerAttribute != null;
-        }
-
+        //  2.1
         private void GetParsingPropperties(object targetClass,
             out ConstructorsStruct constructorParsePropperties,
             out Dictionary<int, FieldsStruct> fieldsParsePropperties)
@@ -424,19 +239,202 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                     fieldsParsePropperties.Add(fieldsStorages[m].MarkerAttribute.Column, fieldsStorages[m]);
                 }
             }
+        }
 
+        //  2.1.1
+        private bool GetConstructors(object targetClass, out List<ConstructorsStruct> markersStorages, bool isShowProcess = false)
+        {
+            ConstructorInfo[] ctors = targetClass.GetType().GetConstructors();
+            bool result = ConverterSupports.TryGetCustomAttributes(ctors, out markersStorages);
+
+            ConverterLog.OutputConstructorsStruct(markersStorages, isShowProcess);
+
+            return result;
+        }
+
+        //  2.1.2
+        private bool GetFields(object targetClass, out List<FieldsStruct> markersStorages, bool isSort = true, bool isShowProcess = false)
+        {
+            markersStorages = new();
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
+            FieldInfo[] fields = targetClass.GetType().GetFields(flags);
+
+            ConverterLog.Log($"Fields: {fields.Length}", isShowProcess);
+
+            if (!ConverterSupports.TryGetCustomAttributes(fields, out markersStorages))
+                return false;
+
+            for (int m = 0; m < markersStorages.Count; m++)
+                markersStorages[m].MarkerAttribute.Initialization(markersStorages[m].MemberInfo, markersStorages[m].MemberInfo.GetValue(targetClass).GetType());
+
+            ConverterLog.OutputMarkersStruct(markersStorages, "Do: Field", "Attribute", isShowProcess);
+
+            if (isSort)
+                markersStorages.Sort((item1, item2) => item1.MarkerAttribute.Column.CompareTo(item2.MarkerAttribute.Column));
+
+            ConverterLog.OutputMarkersStruct(markersStorages, "To -> Field", "Attribute", isShowProcess);
+
+            return markersStorages.Count > 0;
+        }
+
+        //  2.1.3
+        private bool GetTargetConstructor(List<ConstructorsStruct> markersStorages, out ConstructorsStruct targetConstructor)
+        {
+            targetConstructor = new();
+            if (markersStorages.Count == 0)
+            {
+                Debug.LogError($"Constructors List Is Null");
+                return false;
+            }
+
+            ConverterLog.OutputConstructorsStruct(markersStorages, true);
+
+            markersStorages.Sort((item1, item2) => item2.MarkerAttribute.Columns.Length.CompareTo(item1.MarkerAttribute.Columns.Length));
+
+            ConverterLog.OutputConstructorsStruct(markersStorages, true);
+
+            targetConstructor = markersStorages[0];
+
+            ParameterInfo[] parameters = targetConstructor.MemberInfo.GetParameters();
+            targetConstructor.MarkerAttribute.Initialization(targetConstructor.MemberInfo, parameters);
+
+            return targetConstructor.MarkerAttribute != null;
+        }
+
+        //  2.2
+        private void OutputParsingPropperties()
+        {
+            if (constructorsParsePropperties.MarkerAttribute == null && constructorsParsePropperties.MemberInfo == null
+                && fieldsParsePropperties.Count == 0)
+                return;
+
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.black;
+
+            GUILayout.Space(5);
+
+            isParsingProppetiesOutput = GUILayout.Toggle(isParsingProppetiesOutput, "Show Parsing Propperties Output");
+
+            if (!isParsingProppetiesOutput)
+            {
+                GUI.backgroundColor = Color.white;
+                GUI.contentColor = Color.white;
+                return;
+            }
+
+            GUILayout.Space(5);
+
+            GUILayout.BeginVertical();
+            float minHeight = 0f;
+            float maxHeight = 0f;
+
+            float headerHeight = 32.5f;
+            float titleHeight = 25f;
+
+            int elements = 2;
+
+            //  Min
+            minHeight += (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null) ?
+                (headerHeight + Mathf.Min(constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length, elements) * titleHeight) : 0f;
+            minHeight += (fieldsParsePropperties.Count > 0) ? (headerHeight + Mathf.Min(fieldsParsePropperties.Count, elements) * titleHeight) : 0f;
+
+            //  Max
+            maxHeight += (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null) ?
+                (headerHeight + constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length * titleHeight) : 0f;
+            maxHeight += (fieldsParsePropperties.Count > 0) ? (headerHeight + fieldsParsePropperties.Count * titleHeight) : 0f;
+
+            outputProppertiesScrollPosition = EditorGUILayout.BeginScrollView(outputProppertiesScrollPosition, GUILayout.MinHeight(minHeight), GUILayout.MaxHeight(maxHeight), GUILayout.ExpandHeight(false));//, GUILayout.MinHeight(height)); //, GUILayout.Height(height)); //120
+            //outputProppertiesScrollPosition = EditorGUILayout.BeginScrollView(outputProppertiesScrollPosition, GUILayout.MinHeight(minHeight), GUILayout.Height(maxHeight), GUILayout.ExpandHeight(false));//, GUILayout.MinHeight(height)); //, GUILayout.Height(height)); //120
+
+            if (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(true));
+                GUILayout.Space(2.5f);
+
+                GUILayout.Label($"Constructor Propperties: {constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+
+                GUILayout.Space(5);
+
+                DisplayConstructorPropperties(constructorsParsePropperties);
+
+                GUILayout.Space(2.5f);
+                GUILayout.EndHorizontal();
+            }
+
+            if (fieldsParsePropperties.Count > 0)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(true));
+                GUILayout.Space(2.5f);
+
+                GUILayout.Label($"Fields Propperties: {fieldsParsePropperties.Count}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+
+                GUILayout.Space(5);
+
+                DisplayFieldsPropperties(fieldsParsePropperties);
+
+                GUILayout.Space(2.5f);
+                GUILayout.EndHorizontal();
+            }
+
+            EditorGUILayout.EndScrollView();
+            GUILayout.EndVertical();
+
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.white;
+        }
+
+        //  2.2.1
+        private void DisplayConstructorPropperties(ConstructorsStruct propperties)
+        {
+            LoadConstructorMarkerAttribute attribute = propperties.MarkerAttribute;
+
+            for (int i = 0; i < attribute.ArgumentsInfos.Length; i++)
+                GUILayout.Label($"Element {i} | Type: {attribute.ArgumentsInfos[i].ParameterType} / Column: {attribute.Columns[i]} / Name: {attribute.ArgumentsInfos[i].Name}");
+        }
+
+        //  2.2.2
+        private void DisplayFieldsPropperties(Dictionary<int, FieldsStruct> propperties)
+        {
+            for (int i = 0; i < propperties.Count; i++)
+            {
+                LoadMarkerAttribute attribute = propperties.ElementAt(i).Value.MarkerAttribute;
+                GUILayout.Label($"Element {i} | Type: {attribute.FieldArgument} / Column: {attribute.Column}");
+            }
         }
 
         #endregion
 
-        #region Parse Metods
+        #region Main Display/Block 3
 
+        private void OutputParsingDisplay(bool hasCallbackText)
+        {
+            if (hasCallbackText)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.Space(5);
+
+                if (GUILayout.Button("Parse Output To Items"))
+                    ParseText();
+
+                if (GUILayout.Button("Clear Parse Strings"))
+                    parseStrings.Clear();
+
+                if (parseStrings.Count != 0)
+                    DisplaySheetItems();
+
+                GUILayout.Space(5);
+                GUILayout.EndVertical();
+            }
+        }
+
+        //  3.1
         private void ParseText()
         {
-            //GetParsingPropperties(targetClass, out constructorsParsePropperties, out fieldsParsePropperties);
             ParseString();
         }
 
+        //  3.1.1
         private void ParseString()
         {
             parseStrings.Clear();
@@ -446,11 +444,65 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             List<string> lines = new(callbackText.Split(new char[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries));
 
-            for (int l = 0; l < lines.Count; l++)
+            if (lines.Count < 2)
+                return;
+
+            for (int l = 1; l < lines.Count; l++)
             {
                 lines[l].CheckLineForComplexString(out List<string> columns);
+
+                if (parseStrings.ContainsKey(lines[l]))
+                {
+                    Debug.LogError($"Lines {lines[l]} Has Been Added");
+                    continue;
+                }
+
                 parseStrings.Add(lines[l], columns.ToArray());
             }
+        }
+
+        //  3.2
+        private void DisplaySheetItems()
+        {
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.black;
+
+            GUILayout.Space(5);
+
+            isShowSheetItems = GUILayout.Toggle(isShowSheetItems, "Show Sheet Parsing Items");
+
+            if (!isShowSheetItems)
+            {
+                GUI.backgroundColor = Color.white;
+                GUI.contentColor = Color.white;
+                return;
+            }
+
+            GUILayout.Space(5);
+
+            int itemHeight = 135;
+            sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.Height(itemHeight), GUILayout.Height(itemHeight * Mathf.Min(2, parseStrings.Count)));
+
+            for (int l = 0; l < parseStrings.Count; l++)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.Space(2.5f);
+
+                string[] rows = parseStrings.ElementAt(l).Value;
+                GUILayout.Label($"Line: {l} | Columns: {rows.Length}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+                GUILayout.Space(2.5f);
+
+                for (int r = 0; r < rows.Length; r++)
+                    GUILayout.Label($"Column: {r} | {rows[r]}");
+
+                GUILayout.Space(6f);
+                GUILayout.EndVertical();
+            }
+
+            EditorGUILayout.EndScrollView();
+
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.white;
         }
 
         #endregion
