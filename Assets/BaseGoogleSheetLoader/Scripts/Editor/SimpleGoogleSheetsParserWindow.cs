@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
-using SimpleResourcesSystem.SimpleItemSystem;
 using System.Reflection;
 using System.Linq;
 
@@ -32,7 +31,16 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         Texture2D IconTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         Texture2D LogoTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(headerPath);
 
-        Dictionary<string, string[]> parseStrings = new();
+        Dictionary<string, string[]> parseStrings= new();
+        Dictionary<string, string[]> ParseStrings
+        {
+            get => parseStrings;
+            set
+            {
+                parseStrings = value;
+                OnParsingTextChanged?.Invoke(parseStrings);
+            }
+        }
 
         private Vector2 mainScrollPosition = Vector2.zero;
 
@@ -49,6 +57,9 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         ConstructorsStruct constructorsParsePropperties = new();
         Dictionary<int, FieldsStruct> fieldsParsePropperties = new();
+
+        public static event System.Action<Dictionary<string, string[]>> OnParsingTextChanged;
+        public static event System.Action<Object,ConstructorsStruct, Dictionary<int, FieldsStruct>> OnProppertiesChanged;
 
         public SimpleGoogleSheetsParserWindow()
         {
@@ -459,7 +470,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 if (GUILayout.Button("Clear Parse Strings"))
                     ResetParseItems();
 
-                if (parseStrings.Count != 0)
+                if (ParseStrings.Count != 0)
                     DisplaySheetItems();
 
                 GUILayout.Space(5);
@@ -476,7 +487,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         //  3.1.1
         private void ParseString()
         {
-            parseStrings.Clear();
+            ParseStrings.Clear();
 
             if (callbackText == null || callbackText == default)
                 return;
@@ -490,13 +501,13 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             {
                 lines[l].CheckLineForComplexString(out List<string> columns);
 
-                if (parseStrings.ContainsKey(lines[l]))
+                if (ParseStrings.ContainsKey(lines[l]))
                 {
                     Debug.Log($"Error | Lines {lines[l]} Has Been Added");
                     continue;
                 }
 
-                parseStrings.Add(lines[l], columns.ToArray());
+                ParseStrings.Add(lines[l], columns.ToArray());
             }
         }
 
@@ -506,7 +517,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             isShowSheetItems = false;
             sheetItemsScrollPosition = Vector2.zero;
 
-            parseStrings.Clear();
+            ParseStrings.Clear();
         }
 
         //  3.3
@@ -531,14 +542,14 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             int itemHeight = 135;
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
-            sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.MinHeight(itemHeight * Mathf.Min(2, parseStrings.Count)), GUILayout.MaxHeight(itemHeight * Mathf.Min(parseStrings.Count)));
+            sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.MinHeight(itemHeight * Mathf.Min(2, ParseStrings.Count)), GUILayout.MaxHeight(itemHeight * Mathf.Min(ParseStrings.Count)));
 
-            for (int l = 0; l < parseStrings.Count; l++)
+            for (int l = 0; l < ParseStrings.Count; l++)
             {
                 GUILayout.BeginVertical(EditorStyles.helpBox);
                 GUILayout.Space(2.5f);
 
-                string[] rows = parseStrings.ElementAt(l).Value;
+                string[] rows = ParseStrings.ElementAt(l).Value;
                 GUILayout.Label($"Line: {l} | Columns: {rows.Length}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
                 GUILayout.Space(2.5f);
 
