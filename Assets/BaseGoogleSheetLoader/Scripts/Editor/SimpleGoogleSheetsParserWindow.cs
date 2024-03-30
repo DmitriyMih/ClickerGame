@@ -12,6 +12,9 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
     public class SimpleGoogleSheetsParserWindow : BaseParserWindow
     {
+        private static Vector2 windowSizeMin = new Vector2(450f, 600f);
+        private static Vector2 windowSizeMax = new Vector2(600f, 900f);
+
         const string publisherUrl = "https://assetstore.unity.com/publishers/98518?preview=1";
 
         const string windowTitle = "Simple Google Sheets Parser";
@@ -33,12 +36,12 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         private Vector2 mainScrollPosition = Vector2.zero;
 
-        private Vector2 outputProppertiesScrollPosition = Vector2.zero;
         private Vector2 sheetOutputScrollPosition = Vector2.zero;
+        private Vector2 outputProppertiesScrollPosition = Vector2.zero;
         private Vector2 sheetItemsScrollPosition = Vector2.zero;
 
-        private bool isParsingProppetiesOutput = false;
         private bool isShowSheetOutput = false;
+        private bool isParsingProppetiesOutput = false;
         private bool isShowSheetItems = false;
 
         private Object tempObject;
@@ -49,13 +52,26 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         public SimpleGoogleSheetsParserWindow()
         {
-            titleContent = windowTitle;
+            titleText = windowTitle;
+            mainScrollPosition = Vector2.zero;
         }
 
         [MenuItem("My Tools/Simple Resources Item Info Converter Window")]
         public static void ShowWindow()
         {
-            OpenWindow<SimpleGoogleSheetsParserWindow>(windowTitle);
+            OpenWindow(windowTitle, out SimpleGoogleSheetsParserWindow window);
+            window.maxSize = windowSizeMax;
+            window.minSize = windowSizeMin; 
+        }
+
+        protected override void Reconnect()
+        {
+            base.Reconnect(); 
+
+            sheetOutputScrollPosition = Vector2.zero;
+            isShowSheetOutput = false;
+            
+            ResetParseItems();
         }
 
         #region Draw Header
@@ -201,6 +217,9 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             {
                 constructorsParsePropperties.MarkerAttribute = null;
                 constructorsParsePropperties.MemberInfo = null;
+
+                isParsingProppetiesOutput = false;
+                outputProppertiesScrollPosition = Vector2.zero;
 
                 fieldsParsePropperties.Clear();
             }
@@ -438,7 +457,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                     ParseText();
 
                 if (GUILayout.Button("Clear Parse Strings"))
-                    parseStrings.Clear();
+                    ResetParseItems();
 
                 if (parseStrings.Count != 0)
                     DisplaySheetItems();
@@ -473,7 +492,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
                 if (parseStrings.ContainsKey(lines[l]))
                 {
-                    Debug.LogError($"Lines {lines[l]} Has Been Added");
+                    Debug.Log($"Error | Lines {lines[l]} Has Been Added");
                     continue;
                 }
 
@@ -482,6 +501,15 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         }
 
         //  3.2
+        private void ResetParseItems()
+        {
+            isShowSheetItems = false;
+            sheetItemsScrollPosition = Vector2.zero;
+
+            parseStrings.Clear();
+        }
+
+        //  3.3
         private void DisplaySheetItems()
         {
             GUI.backgroundColor = Color.white;
@@ -504,7 +532,6 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
             sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.MinHeight(itemHeight * Mathf.Min(2, parseStrings.Count)), GUILayout.MaxHeight(itemHeight * Mathf.Min(parseStrings.Count)));
-            //sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.MinHeight(itemHeight * Mathf.Min(2, parseStrings.Count)));
 
             for (int l = 0; l < parseStrings.Count; l++)
             {
