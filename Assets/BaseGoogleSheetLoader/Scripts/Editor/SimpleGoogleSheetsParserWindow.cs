@@ -183,7 +183,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         private void ProppertiesDisplay()
         {
             //GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(false));
-            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(false));
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
@@ -320,61 +320,81 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             {
                 GUI.backgroundColor = Color.white;
                 GUI.contentColor = Color.white;
+                //GUILayout.Space(5);
                 return;
             }
 
             GUILayout.Space(5);
 
-            GUILayout.BeginVertical();
-            float minHeight = 0f;
-            float maxHeight = 0f;
+            float min = 0f;
+            float max = 0f;
 
-            float headerHeight = 32.5f;
-            float titleHeight = 25f;
+            float headerHeight = 4f + 6f + 5f + 21f;
+            //float headerHeight = 35f;
+            float titleHeight = 20f;
 
-            int elements = 2;
+            int elements = 1;
 
-            //  Min
-            minHeight += (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null) ?
-                (headerHeight + Mathf.Min(constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length, elements) * titleHeight) : 0f;
-            minHeight += (fieldsParsePropperties.Count > 0) ? (headerHeight + Mathf.Min(fieldsParsePropperties.Count, elements) * titleHeight) : 0f;
-
-            //  Max
-            maxHeight += (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null) ?
-                (headerHeight + constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length * titleHeight) : 0f;
-            maxHeight += (fieldsParsePropperties.Count > 0) ? (headerHeight + fieldsParsePropperties.Count * titleHeight) : 0f;
-
-            outputProppertiesScrollPosition = EditorGUILayout.BeginScrollView(outputProppertiesScrollPosition, GUILayout.MinHeight(minHeight), GUILayout.MaxHeight(maxHeight), GUILayout.ExpandHeight(false));//, GUILayout.MinHeight(height)); //, GUILayout.Height(height)); //120
-            //outputProppertiesScrollPosition = EditorGUILayout.BeginScrollView(outputProppertiesScrollPosition, GUILayout.MinHeight(minHeight), GUILayout.Height(maxHeight), GUILayout.ExpandHeight(false));//, GUILayout.MinHeight(height)); //, GUILayout.Height(height)); //120
+            float minConstructor = 0f;
+            float maxConstructor = 0f;
+            float offcet = 0f;
 
             if (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null)
             {
-                GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(true));
+                minConstructor = headerHeight + Mathf.Min(constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length, elements) * titleHeight;
+                maxConstructor = headerHeight + constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length * titleHeight;
+                offcet += 4f;
+            }
+
+            float minFields = 0f;
+            float maxFields = 0f;
+
+            if (fieldsParsePropperties.Count > 0)
+            {
+                minFields = headerHeight + Mathf.Min(fieldsParsePropperties.Count, elements) * titleHeight;
+                maxFields = headerHeight + (fieldsParsePropperties.Count) * titleHeight;
+                offcet += 4f;
+            }
+
+            min = minConstructor + minFields;
+            max = maxConstructor + maxFields;
+
+            GUILayout.Space(5f);
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            outputProppertiesScrollPosition = EditorGUILayout.BeginScrollView(outputProppertiesScrollPosition, GUILayout.ExpandHeight(false), GUILayout.MinHeight(min), GUILayout.MaxHeight(max + offcet));
+
+            //GUILayout.ExpandHeight(false), GUILayout.MinHeight(minHeight), GUILayout.MaxHeight(maxHeight));
+
+            if (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxConstructor), GUILayout.ExpandHeight(false));
+                //GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxConstructor - 8.5f));
                 GUILayout.Space(2.5f);
 
                 GUILayout.Label($"Constructor Propperties: {constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
 
-                GUILayout.Space(5);
+                GUILayout.Space(2.5f);
 
                 DisplayConstructorPropperties(constructorsParsePropperties);
 
-                GUILayout.Space(2.5f);
-                GUILayout.EndHorizontal();
+                GUILayout.Space(6f);
+                GUILayout.EndVertical();
             }
 
             if (fieldsParsePropperties.Count > 0)
             {
-                GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(true));
+                GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxFields), GUILayout.ExpandHeight(false));
+                //GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxConstructor));
                 GUILayout.Space(2.5f);
 
                 GUILayout.Label($"Fields Propperties: {fieldsParsePropperties.Count}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
 
-                GUILayout.Space(5);
+                GUILayout.Space(2.5f);
 
                 DisplayFieldsPropperties(fieldsParsePropperties);
 
-                GUILayout.Space(2.5f);
-                GUILayout.EndHorizontal();
+                GUILayout.Space(6f);
+                GUILayout.EndVertical();
             }
 
             EditorGUILayout.EndScrollView();
@@ -481,7 +501,10 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             GUILayout.Space(5);
 
             int itemHeight = 135;
-            sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.Height(itemHeight), GUILayout.Height(itemHeight * Mathf.Min(2, parseStrings.Count)));
+
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.MinHeight(itemHeight * Mathf.Min(2, parseStrings.Count)), GUILayout.MaxHeight(itemHeight * Mathf.Min(parseStrings.Count)));
+            //sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.MinHeight(itemHeight * Mathf.Min(2, parseStrings.Count)));
 
             for (int l = 0; l < parseStrings.Count; l++)
             {
@@ -500,6 +523,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             }
 
             EditorGUILayout.EndScrollView();
+            GUILayout.EndVertical();
 
             GUI.backgroundColor = Color.white;
             GUI.contentColor = Color.white;

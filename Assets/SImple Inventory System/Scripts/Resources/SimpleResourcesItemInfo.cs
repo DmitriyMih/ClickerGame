@@ -7,7 +7,7 @@ namespace SimpleResourcesSystem.SimpleItemSystem
     {
         public SimpleResourcesItemInfo() { }
 
-        //[LoadConstructorMarker(1)] public SimpleResourcesItemInfo(string resourcesKey) => ResourcesKey = resourcesKey;
+        [LoadConstructorMarker(1)] public SimpleResourcesItemInfo(string resourcesKey) => ResourcesKey = resourcesKey;
         [LoadConstructorMarker(0, 2)] public SimpleResourcesItemInfo(string resourcesKey, int testY) => ResourcesKey = resourcesKey;
 
         [field: Header("Item Info")]
