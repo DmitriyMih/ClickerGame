@@ -8,7 +8,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
     using FieldsStruct = MarkersStorage<LoadMarkerAttribute, FieldInfo>;
     using ConstructorsStruct = MarkersStorage<LoadConstructorMarkerAttribute, ConstructorInfo>;
 
-    public class SimpleParserFolderControllerWindow : EditorWindow
+    public sealed class SimpleParserFolderControllerWindow : EditorWindow
     {
         const string publisherUrl = "https://assetstore.unity.com/publishers/98518?preview=1";
 
@@ -26,6 +26,15 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         Texture2D IconTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         Texture2D LogoTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(headerPath);
 
+        Dictionary<string, string[]> parseStrings = new();
+
+        private Object targetObject;
+
+        ConstructorsStruct constructorsParsePropperties = new();
+        Dictionary<int, FieldsStruct> fieldsParsePropperties = new();
+
+        public SimpleParserFolderControllerWindow() => ReconnectToParser();
+
         protected GUIStyle GetStyle(TextAnchor textAnchor = TextAnchor.MiddleLeft, FontStyle fontStyle = FontStyle.Normal, int fontSize = 12)
         {
             return new GUIStyle(GUI.skin.label) { alignment = textAnchor, fontStyle = fontStyle, fontSize = fontSize };
@@ -39,6 +48,11 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             window.maxSize = new Vector2(400f, 250f);   //120
             window.minSize = window.maxSize;
+        }
+
+        private void ReconnectToParser()
+        {
+
         }
 
         private void DrawLogo()
@@ -64,8 +78,8 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         {
             DrawLogo();
 
-            GUILayout.Space(85); 
-            
+            GUILayout.Space(85);
+
             DisplayReconnect();
         }
 
@@ -79,22 +93,6 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             GUILayout.Space(5);
             GUILayout.EndVertical();
-        }
-
-        private void ReconnectToParser()
-        {
-            SimpleGoogleSheetsParserWindow.OnParsingTextChanged += OnParsingTextChanged;
-            SimpleGoogleSheetsParserWindow.OnProppertiesChanged += OnProppertiesChanged;
-        }
-
-        private void OnProppertiesChanged(Object targetObject, ConstructorsStruct constructorInfo, Dictionary<int, FieldsStruct> fieldsInfo)
-        {
-
-        }
-
-        private void OnParsingTextChanged(Dictionary<string, string[]> linesInfo)
-        {
-
         }
     }
 }

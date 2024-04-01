@@ -5,9 +5,8 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
-    path: Assets/Samples/Simple Resources System/1.0.0/Samples Idle System/Scenes/Idle
-      Mixed Demo Scene.unity
-    guid: 9b2b8d59f63898e44a9bdbcf934a737a
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: a69aaf006f4d3994bb2bc6f5b1a4b722, type: 2}

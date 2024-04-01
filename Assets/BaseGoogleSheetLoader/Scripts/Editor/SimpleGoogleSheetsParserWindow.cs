@@ -9,7 +9,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
     using FieldsStruct = MarkersStorage<LoadMarkerAttribute, FieldInfo>;
     using ConstructorsStruct = MarkersStorage<LoadConstructorMarkerAttribute, ConstructorInfo>;
 
-    public class SimpleGoogleSheetsParserWindow : BaseParserWindow
+    public sealed class SimpleGoogleSheetsParserWindow : BaseParserWindow
     {
         private static Vector2 windowSizeMin = new Vector2(450f, 600f);
         private static Vector2 windowSizeMax = new Vector2(600f, 900f);
@@ -21,6 +21,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         const string iconPath = "Assets/BaseGoogleSheetLoader/System/LogoIcon.png";
 
         Color backgroundColor = new Color(1f, 0.96f, 0.84f, 1f);
+        //Color backgroundColor = new Color(116f / 255f, 185f / 255f, 1f, 1f); 
 
         int widthOffcetLeft = 65;
         int widthOffcetRight = 10;
@@ -31,16 +32,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         Texture2D IconTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         Texture2D LogoTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(headerPath);
 
-        Dictionary<string, string[]> parseStrings= new();
-        Dictionary<string, string[]> ParseStrings
-        {
-            get => parseStrings;
-            set
-            {
-                parseStrings = value;
-                OnParsingTextChanged?.Invoke(parseStrings);
-            }
-        }
+        Dictionary<string, string[]> parseLines = new();
 
         private Vector2 mainScrollPosition = Vector2.zero;
 
@@ -52,14 +44,12 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         private bool isParsingProppetiesOutput = false;
         private bool isShowSheetItems = false;
 
-        private Object tempObject;
         private Object targetObject;
 
         ConstructorsStruct constructorsParsePropperties = new();
         Dictionary<int, FieldsStruct> fieldsParsePropperties = new();
 
-        public static event System.Action<Dictionary<string, string[]>> OnParsingTextChanged;
-        public static event System.Action<Object,ConstructorsStruct, Dictionary<int, FieldsStruct>> OnProppertiesChanged;
+        DataStruct dataStruct = new();
 
         public SimpleGoogleSheetsParserWindow()
         {
@@ -72,17 +62,20 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         {
             OpenWindow(windowTitle, out SimpleGoogleSheetsParserWindow window);
             window.maxSize = windowSizeMax;
-            window.minSize = windowSizeMin; 
+            window.minSize = windowSizeMin;
         }
 
         protected override void Reconnect()
         {
-            base.Reconnect(); 
+            base.Reconnect();
 
             sheetOutputScrollPosition = Vector2.zero;
             isShowSheetOutput = false;
-            
+
             ResetParseItems();
+
+            dataStruct.DataObjects = null;
+            dataStruct.ObjectsType = null;
         }
 
         #region Draw Header
@@ -147,11 +140,15 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             GUILayout.Space(10);
 
-            ProppertiesDisplay();
+            DisplayPropperties();
 
             GUILayout.Space(10);
 
-            OutputParsingDisplay(hasCallbackText);
+            DisplayOutputParsing(hasCallbackText);
+
+            GUILayout.Space(10);
+
+            DisplayParsingAndCreate();
         }
 
         #endregion
@@ -207,7 +204,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         #region Main Display/Block 2
 
-        private void ProppertiesDisplay()
+        private void DisplayPropperties()
         {
             //GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(false));
             GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(false));
@@ -215,30 +212,40 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Get Parsing Propperties") && targetObject != null)
-            {
                 GetParsingPropperties(targetObject, out constructorsParsePropperties, out fieldsParsePropperties);
-                tempObject = targetObject;
+
+            //targetObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
+
+            Object tempObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
+
+            if (tempObject != targetObject)
+            {
+                ClearParsingPropperties();
+                targetObject = tempObject;
             }
 
-            targetObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
 
             GUILayout.EndHorizontal();
 
             if (GUILayout.Button("Clear Parsing Propperties"))
-            {
-                constructorsParsePropperties.MarkerAttribute = null;
-                constructorsParsePropperties.MemberInfo = null;
-
-                isParsingProppetiesOutput = false;
-                outputProppertiesScrollPosition = Vector2.zero;
-
-                fieldsParsePropperties.Clear();
-            }
+                ClearParsingPropperties();
 
             OutputParsingPropperties();
 
             GUILayout.Space(5);
             GUILayout.EndVertical();
+        }
+
+        //  2.0
+        private void ClearParsingPropperties()
+        {
+            constructorsParsePropperties.MarkerAttribute = null;
+            constructorsParsePropperties.MemberInfo = null;
+
+            isParsingProppetiesOutput = false;
+            outputProppertiesScrollPosition = Vector2.zero;
+
+            fieldsParsePropperties.Clear();
         }
 
         //  2.1
@@ -457,20 +464,20 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         #region Main Display/Block 3
 
-        private void OutputParsingDisplay(bool hasCallbackText)
+        private void DisplayOutputParsing(bool hasCallbackText)
         {
             if (hasCallbackText)
             {
                 GUILayout.BeginVertical(EditorStyles.helpBox);
                 GUILayout.Space(5);
 
-                if (GUILayout.Button("Parse Output To Items"))
+                if (GUILayout.Button("Parse Output To Line Items"))
                     ParseText();
 
-                if (GUILayout.Button("Clear Parse Strings"))
+                if (GUILayout.Button("Clear Parse Lines"))
                     ResetParseItems();
 
-                if (ParseStrings.Count != 0)
+                if (parseLines.Count != 0)
                     DisplaySheetItems();
 
                 GUILayout.Space(5);
@@ -487,7 +494,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         //  3.1.1
         private void ParseString()
         {
-            ParseStrings.Clear();
+            parseLines.Clear();
 
             if (callbackText == null || callbackText == default)
                 return;
@@ -499,15 +506,22 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             for (int l = 1; l < lines.Count; l++)
             {
-                lines[l].CheckLineForComplexString(out List<string> columns);
+                lines[l].ParseStringToColumns(out List<string> columns);
 
-                if (ParseStrings.ContainsKey(lines[l]))
+                if (!columns.CheckRowsForData())
+                {
+                    Debug.Log($"Error | Line {lines[l]} Data Is Null");
+                    continue;
+                }
+
+
+                if (parseLines.ContainsKey(lines[l]))
                 {
                     Debug.Log($"Error | Lines {lines[l]} Has Been Added");
                     continue;
                 }
 
-                ParseStrings.Add(lines[l], columns.ToArray());
+                parseLines.Add(lines[l], columns.ToArray());
             }
         }
 
@@ -517,7 +531,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             isShowSheetItems = false;
             sheetItemsScrollPosition = Vector2.zero;
 
-            ParseStrings.Clear();
+            parseLines.Clear();
         }
 
         //  3.3
@@ -542,14 +556,14 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             int itemHeight = 135;
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
-            sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.MinHeight(itemHeight * Mathf.Min(2, ParseStrings.Count)), GUILayout.MaxHeight(itemHeight * Mathf.Min(ParseStrings.Count)));
+            sheetItemsScrollPosition = EditorGUILayout.BeginScrollView(sheetItemsScrollPosition, GUILayout.MinHeight(itemHeight * Mathf.Min(2, parseLines.Count)), GUILayout.MaxHeight(itemHeight * Mathf.Min(parseLines.Count)));
 
-            for (int l = 0; l < ParseStrings.Count; l++)
+            for (int l = 0; l < parseLines.Count; l++)
             {
                 GUILayout.BeginVertical(EditorStyles.helpBox);
                 GUILayout.Space(2.5f);
 
-                string[] rows = ParseStrings.ElementAt(l).Value;
+                string[] rows = parseLines.ElementAt(l).Value;
                 GUILayout.Label($"Line: {l} | Columns: {rows.Length}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
                 GUILayout.Space(2.5f);
 
@@ -565,6 +579,101 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             GUI.backgroundColor = Color.white;
             GUI.contentColor = Color.white;
+        }
+
+        #endregion
+
+        #region Main Display/Block 4
+
+        private void DisplayParsingAndCreate()
+        {
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.Space(5f);
+
+            if (!CheckByAvailable(out List<string> outWarnings))
+            {
+                GUI.backgroundColor = Color.white;
+                GUI.contentColor = Color.black;
+
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.Space(5f);
+
+                GUILayout.Label("Warnings", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+                DrawWarnings(outWarnings);
+
+                GUILayout.Space(5f);
+                GUILayout.EndVertical();
+
+                GUILayout.Space(5f);
+
+                GUI.backgroundColor = Color.white;
+                GUI.contentColor = Color.white;
+            }
+            else
+            {
+                if (GUILayout.Button("Parse Lines To Data Items"))
+                {
+                    ParseLinesToDataItems();
+                }
+            }
+
+            if (GUILayout.Button("Clear Items Data"))
+                objects.Clear();
+
+            GUILayout.Space(5f);
+            GUILayout.EndVertical();
+
+            for (int i = 0; i < objects.Count; i++)
+            {
+                //Debug.Log($"{i} | {objects[i]} | Type: {objects[i].GetType()}");
+                EditorGUILayout.ObjectField(objects[i], typeof(Object));
+            }
+
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.white;
+        }
+
+        //  4.1
+        private bool CheckByAvailable(out List<string> outWarnings)
+        {
+            outWarnings = new();
+
+            if (string.IsNullOrWhiteSpace(callbackText))
+                outWarnings.Add("Google Sheet Text Is Null");
+
+            if (targetObject == null)
+                outWarnings.Add("Target Object Is Null");
+
+            if (parseLines.Count == 0)
+                outWarnings.Add("Parse Strings Is Null");
+
+            if ((constructorsParsePropperties.MarkerAttribute == null || constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length == 0) && fieldsParsePropperties.Count == 0)
+                outWarnings.Add("Parameters By Parse is Null");
+
+            return outWarnings.Count == 0;
+        }
+
+        //  4.2
+        private void DrawWarnings(List<string> warnings)
+        {
+            for (int i = 0; i < warnings.Count; i++)
+                GUILayout.Label(warnings[i]);
+        }
+
+        List<Object> objects = new();
+        //  4.3
+        private void ParseLinesToDataItems()
+        {
+            System.Type type = targetObject.GetType();
+
+            for (int i = 0; i < parseLines.Count; i++)
+            {
+                Object obj = Instantiate(targetObject);
+                obj.name = $"Item {i}";
+
+                objects.Add(obj);
+            }
+
         }
 
         #endregion

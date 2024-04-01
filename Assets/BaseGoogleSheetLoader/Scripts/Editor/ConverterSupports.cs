@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using System;
 
 namespace SimpleResourcesSystem.ResourceManagementSystem
 {
@@ -22,18 +23,33 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         }
     }
 
+    public struct DataStruct
+    {
+        public List<object> DataObjects;
+        public Type ObjectsType;
+
+        public DataStruct(List<object> dataObjects, Type objectsType)
+        {
+            DataObjects = new(dataObjects);
+            ObjectsType = objectsType;
+        }
+    }
+
     public static class ConverterSupports
     {
-        public static void ParseString(this string str,
-            Dictionary<int, ConstructorsStruct> constructorsPropperties,
-            Dictionary<int, FieldsStruct> fieldsPropperties)
+        public static bool CheckRowsForData(this List<string> rows)
         {
+            for (int i = 0; i < rows.Count; i++)
+                if (!String.IsNullOrWhiteSpace(rows[i]))
+                    return true;
 
+            return false;
         }
+
         private static bool CheckStartComplexString(this string checkString) => checkString.Length > 0 && checkString[0] == '"';
         private static bool CheckEndComplexString(this string checkString) => checkString.Length > 0 && checkString[checkString.Length - 1] == '"';
-       
-        public static void CheckLineForComplexString(this string line, out List<string> outColumns)
+
+        public static void ParseStringToColumns(this string line, out List<string> outColumns)
         {
             List<string> columns = line.Split(",", System.StringSplitOptions.None).ToList();
 
@@ -150,7 +166,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 Debug.Log(message);
         }
 
-        public static void OutputMemberDictionary<TAttribute, TMember>(Dictionary<TMember, TAttribute> pairs, string keyTitle, string valueTitle, bool isShow = true)
+        public static void OutputMemberDictionary<TAttribute, TMember>(Dictionary<TMember, TAttribute> pairs, string keyTitle, string valueTitle, bool isShow = false)
                 where TAttribute : System.Attribute
                 where TMember : MemberInfo
         {
@@ -158,38 +174,38 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 ConverterLog.Log($"{i} | {keyTitle}: {pairs.ElementAt(i).Key} / {valueTitle}: {pairs.ElementAt(i).Value}", isShow);
         }
 
-        public static void OutputDictionary<TKey, TValue>(Dictionary<TValue, TKey> pairs, string keyTitle, string valueTitle, bool isShow = true)
+        public static void OutputDictionary<TKey, TValue>(Dictionary<TValue, TKey> pairs, string keyTitle, string valueTitle, bool isShow = false)
         {
             for (int i = 0; i < pairs.Count; i++)
                 ConverterLog.Log($"{i} | {keyTitle}: {pairs.ElementAt(i).Key} / {valueTitle}: {pairs.ElementAt(i).Value}", isShow);
         }
 
-        public static void OutputMarkersStruct<TAttribute, TMember>(List<MarkersStorage<TAttribute, TMember>> markers, string memberTitle, string ttributeTitle, bool isShow = true)
+        public static void OutputMarkersStruct<TAttribute, TMember>(List<MarkersStorage<TAttribute, TMember>> markers, string memberTitle, string ttributeTitle, bool isShow = false)
             where TAttribute : LoadMarkerAttribute
             where TMember : MemberInfo
         {
             for (int i = 0; i < markers.Count; i++)
-                ConverterLog.Log($"{markers[i].MarkerAttribute.Column} | {memberTitle}: {markers[i].MemberInfo} / {ttributeTitle}: {markers[i].MarkerAttribute}");
+                ConverterLog.Log($"{markers[i].MarkerAttribute.Column} | {memberTitle}: {markers[i].MemberInfo} / {ttributeTitle}: {markers[i].MarkerAttribute}", isShow);
         }
 
-        public static void OutputConstructorStruct(ConstructorsStruct marker, bool isShow = true)
+        public static void OutputConstructorStruct(ConstructorsStruct marker, bool isShow = false)
         {
-                ConverterLog.Log($"Constructor: {marker.MemberInfo} / {marker.MarkerAttribute.Columns}");
-                ParameterInfo[] parameters = marker.MemberInfo.GetParameters();
+            ConverterLog.Log($"Constructor: {marker.MemberInfo} / {marker.MarkerAttribute.Columns}", isShow);
+            ParameterInfo[] parameters = marker.MemberInfo.GetParameters();
 
-                for (int p = 0; p < parameters.Length; p++)
-                    ConverterLog.Log($"Param {parameters[p].Position} is named {parameters[p].Name} and is of type {parameters[p].ParameterType}");
+            for (int p = 0; p < parameters.Length; p++)
+                ConverterLog.Log($"Param {parameters[p].Position} is named {parameters[p].Name} and is of type {parameters[p].ParameterType}", isShow);
         }
 
-        public static void OutputConstructorsStruct(List<ConstructorsStruct> markers, bool isShow = true)
+        public static void OutputConstructorsStruct(List<ConstructorsStruct> markers, bool isShow = false)
         {
             for (int m = 0; m < markers.Count; m++)
             {
-                ConverterLog.Log($"Constructor: {markers[m].MemberInfo} / {markers[m].MarkerAttribute.Columns}");
+                ConverterLog.Log($"Constructor: {markers[m].MemberInfo} / {markers[m].MarkerAttribute.Columns}", isShow);
                 ParameterInfo[] parameters = markers[m].MemberInfo.GetParameters();
 
                 for (int p = 0; p < parameters.Length; p++)
-                    ConverterLog.Log($"Param {parameters[p].Position} is named {parameters[p].Name} and is of type {parameters[p].ParameterType}");
+                    ConverterLog.Log($"Param {parameters[p].Position} is named {parameters[p].Name} and is of type {parameters[p].ParameterType}", isShow);
             }
         }
 
