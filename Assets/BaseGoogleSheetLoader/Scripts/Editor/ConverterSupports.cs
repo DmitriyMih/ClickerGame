@@ -8,6 +8,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 {
     using FieldsStruct = MarkersStorage<LoadMarkerAttribute, FieldInfo>;
     using ConstructorsStruct = MarkersStorage<LoadConstructorMarkerAttribute, ConstructorInfo>;
+    using Object = UnityEngine.Object;
 
     public struct MarkersStorage<TAttribute, TMember>
         where TAttribute : System.Attribute
@@ -37,6 +38,125 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
     public static class ConverterSupports
     {
+        public static bool TryParseByType<TType>(this string str, TType type, out object outObj) where TType : Type
+        {
+            outObj = null;
+
+            if (string.IsNullOrWhiteSpace(str))
+                return false;
+
+            if (type.GetType().IsArray)
+            {
+                List<string> elements = str.Split(",", System.StringSplitOptions.None).ToList();
+                List<object> outArray = new();
+
+                Type elementType = type.GetElementType();
+
+                for (int i = 0; i < elements.Count; i++)
+                {
+                    var element = Convert.ChangeType(elements[i], elementType);
+                    outArray.Add(element);
+                }
+
+                outObj = outArray;
+            }
+            else
+                outObj = Convert.ChangeType(str, type);
+
+            Debug.Log($"Parse Out: {outObj} | Type: {outObj.GetType()}");
+            return outObj != null;
+        }
+
+        //  2.1
+        public static (bool, bool) GetParsingPropperties(this Object targetClass,
+            out ConstructorsStruct constructorParsePropperties,
+            out Dictionary<int, FieldsStruct> fieldsParsePropperties, bool showOutput)
+        {
+            constructorParsePropperties = new();
+            fieldsParsePropperties = new();
+
+            bool hasConstructors = targetClass.TryGetConstructors(out List<ConstructorsStruct> constructorsStorages, showOutput);
+            bool hasFields = targetClass.TryGetFields(out List<FieldsStruct> fieldsStorages, showOutput);
+
+            if (hasConstructors)
+                hasConstructors = TryGetTargetConstructor(constructorsStorages, out constructorParsePropperties);
+
+            if (!hasConstructors)
+                Debug.Log($"Not has Constructors Propperties");
+            else
+                ConverterLog.OutputConstructorStruct(constructorParsePropperties, showOutput);
+
+            if (!hasFields)
+                Debug.Log($"Not Has Fields Propperties");
+            else
+            {
+                for (int m = 0; m < fieldsStorages.Count; m++)
+                    fieldsParsePropperties.Add(fieldsStorages[m].MarkerAttribute.Column, fieldsStorages[m]);
+            }
+
+            return (hasConstructors, hasFields);
+        }
+
+        //  2.1.1
+        private static bool TryGetConstructors(this Object targetClass, out List<ConstructorsStruct> markersStorages, bool isShowProcess = false)
+        {
+            ConstructorInfo[] ctors = targetClass.GetType().GetConstructors();
+            bool result = ConverterSupports.TryGetCustomAttributes(ctors, out markersStorages);
+
+            ConverterLog.OutputConstructorsStruct(markersStorages, isShowProcess);
+
+            return result;
+        }
+
+        private static bool TryGetFields(this Object targetClass, out List<FieldsStruct> markersStorages, bool isSort = true, bool isShowProcess = false)
+        {
+            markersStorages = new();
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
+            FieldInfo[] fields = targetClass.GetType().GetFields(flags);
+
+            ConverterLog.Log($"Fields: {fields.Length}", isShowProcess);
+
+            if (!ConverterSupports.TryGetCustomAttributes(fields, out markersStorages))
+                return false;
+
+            for (int m = 0; m < markersStorages.Count; m++)
+                markersStorages[m].MarkerAttribute.Initialization(markersStorages[m].MemberInfo, markersStorages[m].MemberInfo.GetValue(targetClass).GetType());
+
+            ConverterLog.OutputMarkersStruct(markersStorages, "Do: Field", "Attribute", isShowProcess);
+
+            if (isSort)
+                markersStorages.Sort((item1, item2) => item1.MarkerAttribute.Column.CompareTo(item2.MarkerAttribute.Column));
+
+            ConverterLog.OutputMarkersStruct(markersStorages, "To -> Field", "Attribute", isShowProcess);
+
+            return markersStorages.Count > 0;
+        }
+
+        private static bool TryGetTargetConstructor(this List<ConstructorsStruct> markersStorages, out ConstructorsStruct targetConstructor)
+        {
+            targetConstructor = new();
+            if (markersStorages.Count == 0)
+            {
+                Debug.LogError($"Constructors List Is Null");
+                return false;
+            }
+
+            ConverterLog.OutputConstructorsStruct(markersStorages, true);
+
+            markersStorages.Sort((item1, item2) => item2.MarkerAttribute.Columns.Length.CompareTo(item1.MarkerAttribute.Columns.Length));
+
+            ConverterLog.OutputConstructorsStruct(markersStorages, true);
+
+            targetConstructor = markersStorages[0];
+
+            ParameterInfo[] parameters = targetConstructor.MemberInfo.GetParameters();
+            targetConstructor.MarkerAttribute.Initialization(targetConstructor.MemberInfo, parameters);
+
+            return targetConstructor.MarkerAttribute != null;
+        }
+
+        //  Google Sheet
         public static bool CheckRowsForData(this List<string> rows)
         {
             for (int i = 0; i < rows.Count; i++)

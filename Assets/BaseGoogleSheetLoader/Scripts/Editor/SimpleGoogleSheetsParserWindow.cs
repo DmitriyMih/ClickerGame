@@ -21,7 +21,6 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         const string iconPath = "Assets/BaseGoogleSheetLoader/System/LogoIcon.png";
 
         Color backgroundColor = new Color(1f, 0.96f, 0.84f, 1f);
-        //Color backgroundColor = new Color(116f / 255f, 185f / 255f, 1f, 1f); 
 
         int widthOffcetLeft = 65;
         int widthOffcetRight = 10;
@@ -212,7 +211,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Get Parsing Propperties") && targetObject != null)
-                GetParsingPropperties(targetObject, out constructorsParsePropperties, out fieldsParsePropperties);
+                targetObject.GetParsingPropperties(out constructorsParsePropperties, out fieldsParsePropperties, true);
 
             //targetObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
 
@@ -223,7 +222,6 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 ClearParsingPropperties();
                 targetObject = tempObject;
             }
-
 
             GUILayout.EndHorizontal();
 
@@ -246,97 +244,6 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             outputProppertiesScrollPosition = Vector2.zero;
 
             fieldsParsePropperties.Clear();
-        }
-
-        //  2.1
-        private void GetParsingPropperties(object targetClass,
-            out ConstructorsStruct constructorParsePropperties,
-            out Dictionary<int, FieldsStruct> fieldsParsePropperties)
-        {
-            constructorParsePropperties = new();
-            fieldsParsePropperties = new();
-
-            bool hasConstructors = GetConstructors(targetClass, out List<ConstructorsStruct> constructorsStorages, true);
-            bool hasFields = GetFields(targetClass, out List<FieldsStruct> fieldsStorages, true);
-
-            if (hasConstructors)
-                hasConstructors = GetTargetConstructor(constructorsStorages, out constructorParsePropperties);
-
-            if (!hasConstructors)
-                Debug.Log($"Not has Constructors Propperties");
-            else
-                ConverterLog.OutputConstructorStruct(constructorParsePropperties, true);
-
-            if (!hasFields)
-                Debug.Log($"Not Has Fields Propperties");
-            else
-            {
-                for (int m = 0; m < fieldsStorages.Count; m++)
-                {
-                    fieldsParsePropperties.Add(fieldsStorages[m].MarkerAttribute.Column, fieldsStorages[m]);
-                }
-            }
-        }
-
-        //  2.1.1
-        private bool GetConstructors(object targetClass, out List<ConstructorsStruct> markersStorages, bool isShowProcess = false)
-        {
-            ConstructorInfo[] ctors = targetClass.GetType().GetConstructors();
-            bool result = ConverterSupports.TryGetCustomAttributes(ctors, out markersStorages);
-
-            ConverterLog.OutputConstructorsStruct(markersStorages, isShowProcess);
-
-            return result;
-        }
-
-        //  2.1.2
-        private bool GetFields(object targetClass, out List<FieldsStruct> markersStorages, bool isSort = true, bool isShowProcess = false)
-        {
-            markersStorages = new();
-            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-
-            FieldInfo[] fields = targetClass.GetType().GetFields(flags);
-
-            ConverterLog.Log($"Fields: {fields.Length}", isShowProcess);
-
-            if (!ConverterSupports.TryGetCustomAttributes(fields, out markersStorages))
-                return false;
-
-            for (int m = 0; m < markersStorages.Count; m++)
-                markersStorages[m].MarkerAttribute.Initialization(markersStorages[m].MemberInfo, markersStorages[m].MemberInfo.GetValue(targetClass).GetType());
-
-            ConverterLog.OutputMarkersStruct(markersStorages, "Do: Field", "Attribute", isShowProcess);
-
-            if (isSort)
-                markersStorages.Sort((item1, item2) => item1.MarkerAttribute.Column.CompareTo(item2.MarkerAttribute.Column));
-
-            ConverterLog.OutputMarkersStruct(markersStorages, "To -> Field", "Attribute", isShowProcess);
-
-            return markersStorages.Count > 0;
-        }
-
-        //  2.1.3
-        private bool GetTargetConstructor(List<ConstructorsStruct> markersStorages, out ConstructorsStruct targetConstructor)
-        {
-            targetConstructor = new();
-            if (markersStorages.Count == 0)
-            {
-                Debug.LogError($"Constructors List Is Null");
-                return false;
-            }
-
-            ConverterLog.OutputConstructorsStruct(markersStorages, true);
-
-            markersStorages.Sort((item1, item2) => item2.MarkerAttribute.Columns.Length.CompareTo(item1.MarkerAttribute.Columns.Length));
-
-            ConverterLog.OutputConstructorsStruct(markersStorages, true);
-
-            targetConstructor = markersStorages[0];
-
-            ParameterInfo[] parameters = targetConstructor.MemberInfo.GetParameters();
-            targetConstructor.MarkerAttribute.Initialization(targetConstructor.MemberInfo, parameters);
-
-            return targetConstructor.MarkerAttribute != null;
         }
 
         //  2.2
@@ -510,18 +417,18 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
                 if (!columns.CheckRowsForData())
                 {
-                    Debug.Log($"Error | Line {lines[l]} Data Is Null");
+                    //Debug.Log($"Error | Line {lines[l]} Data Is Null");
                     continue;
                 }
 
 
-                if (parseLines.ContainsKey(lines[l]))
+                if (parseLines.ContainsKey(columns[0]))
                 {
                     Debug.Log($"Error | Lines {lines[l]} Has Been Added");
                     continue;
                 }
 
-                parseLines.Add(lines[l], columns.ToArray());
+                parseLines.Add(columns[0], columns.ToArray());
             }
         }
 
@@ -618,15 +525,15 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             }
 
             if (GUILayout.Button("Clear Items Data"))
-                objects.Clear();
+                objectsData.Clear();
 
             GUILayout.Space(5f);
             GUILayout.EndVertical();
 
-            for (int i = 0; i < objects.Count; i++)
+            for (int i = 0; i < objectsData.Count; i++)
             {
                 //Debug.Log($"{i} | {objects[i]} | Type: {objects[i].GetType()}");
-                EditorGUILayout.ObjectField(objects[i], typeof(Object));
+                EditorGUILayout.ObjectField(objectsData[i], typeof(Object));
             }
 
             GUI.backgroundColor = Color.white;
@@ -660,20 +567,57 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 GUILayout.Label(warnings[i]);
         }
 
-        List<Object> objects = new();
+        List<Object> objectsData = new();
         //  4.3
         private void ParseLinesToDataItems()
         {
+            objectsData.Clear();
             System.Type type = targetObject.GetType();
 
             for (int i = 0; i < parseLines.Count; i++)
             {
-                Object obj = Instantiate(targetObject);
-                obj.name = $"Item {i}";
+                object obj;
+                if (TryParseLineToConstructorArguments(parseLines.ElementAt(i).Value, out object[] constructorArguments))
+                    obj = System.Activator.CreateInstance(type, constructorArguments);
+                else
+                    obj = System.Activator.CreateInstance(type);
 
-                objects.Add(obj);
+                objectsData.Add((Object)obj);
+            }
+        }
+
+        private bool TryParseLineToConstructorArguments(string[] columnsText, out object[] consructorArguments)
+        {
+            consructorArguments = null;
+
+            if (constructorsParsePropperties.MarkerAttribute == null)
+                return false;
+
+            LoadConstructorMarkerAttribute marker = constructorsParsePropperties.MarkerAttribute;
+            ParameterInfo[] parameters = marker.ArgumentsInfos;
+
+            Debug.Log($"Param: {parameters.Length}");
+            List<object> outArguments = new();
+
+            for (int i = 0; i < marker.Columns.Length; i++)
+            {
+                int column = marker.Columns[i];
+
+                if (column < 0 || column > columnsText.Length - 1)
+                {
+                    Debug.LogError($"Parse Error | Column {column} Not Found");
+                    return false;
+                }
+
+                System.Type type = parameters[i].ParameterType;
+
+                Debug.Log($"Parse: {columnsText[column]} | Column: {column} | Type: {type}");
+                if (columnsText[column].TryParseByType(type, out object arrayObj))
+                    outArguments.Add(arrayObj);
             }
 
+            consructorArguments = outArguments.ToArray();
+            return true;
         }
 
         #endregion
