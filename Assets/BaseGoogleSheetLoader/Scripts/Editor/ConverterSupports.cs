@@ -7,7 +7,7 @@ using System;
 namespace SimpleResourcesSystem.ResourceManagementSystem
 {
     using FieldsStruct = MarkersStorage<LoadMarkerAttribute, FieldInfo>;
-    using ConstructorsStruct = MarkersStorage<LoadConstructorMarkerAttribute, ConstructorInfo>;
+    using ConstructorStruct = MarkersStorage<LoadConstructorMarkerAttribute, ConstructorInfo>;
     using Object = UnityEngine.Object;
 
     public struct MarkersStorage<TAttribute, TMember>
@@ -38,6 +38,45 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
     public static class ConverterSupports
     {
+        public static void ParseToFields(this string[] columnsText, Dictionary<int, FieldsStruct> propperties, out Dictionary<int, object> outFieldsValues)
+        {
+            outFieldsValues = null;
+
+
+        }
+
+        public static bool TryParseLineToConstructorArguments(this string[] columnsText, ConstructorStruct constructor, out List<object> consructorArguments)
+        {
+            consructorArguments = new();
+
+            if (constructor.MarkerAttribute == null)
+                return false;
+
+            LoadConstructorMarkerAttribute marker = constructor.MarkerAttribute;
+            ParameterInfo[] parameters = marker.ArgumentsInfos;
+
+            Debug.Log($"Param: {parameters.Length}");
+
+            for (int i = 0; i < marker.Columns.Length; i++)
+            {
+                int column = marker.Columns[i];
+
+                if (column < 0 || column > columnsText.Length - 1)
+                {
+                    Debug.LogError($"Parse Error | Column {column} Not Found");
+                    return false;
+                }
+
+                System.Type type = parameters[i].ParameterType;
+
+                Debug.Log($"Parse: {columnsText[column]} | Column: {column} | Type: {type}");
+                if (columnsText[column].TryParseByType(type, out object arrayObj))
+                    consructorArguments.Add(arrayObj);
+            }
+
+            return true;
+        }
+
         public static bool TryParseByType<TType>(this string str, TType type, out object outObj) where TType : Type
         {
             outObj = null;
@@ -69,13 +108,13 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         //  2.1
         public static (bool, bool) GetParsingPropperties(this Object targetClass,
-            out ConstructorsStruct constructorParsePropperties,
+            out ConstructorStruct constructorParsePropperties,
             out Dictionary<int, FieldsStruct> fieldsParsePropperties, bool showOutput)
         {
             constructorParsePropperties = new();
             fieldsParsePropperties = new();
 
-            bool hasConstructors = targetClass.TryGetConstructors(out List<ConstructorsStruct> constructorsStorages, showOutput);
+            bool hasConstructors = targetClass.TryGetConstructors(out List<ConstructorStruct> constructorsStorages, showOutput);
             bool hasFields = targetClass.TryGetFields(out List<FieldsStruct> fieldsStorages, showOutput);
 
             if (hasConstructors)
@@ -98,7 +137,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         }
 
         //  2.1.1
-        private static bool TryGetConstructors(this Object targetClass, out List<ConstructorsStruct> markersStorages, bool isShowProcess = false)
+        private static bool TryGetConstructors(this Object targetClass, out List<ConstructorStruct> markersStorages, bool isShowProcess = false)
         {
             ConstructorInfo[] ctors = targetClass.GetType().GetConstructors();
             bool result = ConverterSupports.TryGetCustomAttributes(ctors, out markersStorages);
@@ -108,7 +147,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             return result;
         }
 
-        private static bool TryGetFields(this Object targetClass, out List<FieldsStruct> markersStorages, bool isSort = true, bool isShowProcess = false)
+        public static bool TryGetFields(this Object targetClass, out List<FieldsStruct> markersStorages, bool isSort = true, bool isShowProcess = false)
         {
             markersStorages = new();
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
@@ -133,7 +172,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             return markersStorages.Count > 0;
         }
 
-        private static bool TryGetTargetConstructor(this List<ConstructorsStruct> markersStorages, out ConstructorsStruct targetConstructor)
+        private static bool TryGetTargetConstructor(this List<ConstructorStruct> markersStorages, out ConstructorStruct targetConstructor)
         {
             targetConstructor = new();
             if (markersStorages.Count == 0)
@@ -308,7 +347,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 ConverterLog.Log($"{markers[i].MarkerAttribute.Column} | {memberTitle}: {markers[i].MemberInfo} / {ttributeTitle}: {markers[i].MarkerAttribute}", isShow);
         }
 
-        public static void OutputConstructorStruct(ConstructorsStruct marker, bool isShow = false)
+        public static void OutputConstructorStruct(ConstructorStruct marker, bool isShow = false)
         {
             ConverterLog.Log($"Constructor: {marker.MemberInfo} / {marker.MarkerAttribute.Columns}", isShow);
             ParameterInfo[] parameters = marker.MemberInfo.GetParameters();
@@ -317,7 +356,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 ConverterLog.Log($"Param {parameters[p].Position} is named {parameters[p].Name} and is of type {parameters[p].ParameterType}", isShow);
         }
 
-        public static void OutputConstructorsStruct(List<ConstructorsStruct> markers, bool isShow = false)
+        public static void OutputConstructorsStruct(List<ConstructorStruct> markers, bool isShow = false)
         {
             for (int m = 0; m < markers.Count; m++)
             {

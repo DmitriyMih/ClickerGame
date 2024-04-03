@@ -576,48 +576,19 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             for (int i = 0; i < parseLines.Count; i++)
             {
-                object obj;
-                if (TryParseLineToConstructorArguments(parseLines.ElementAt(i).Value, out object[] constructorArguments))
-                    obj = System.Activator.CreateInstance(type, constructorArguments);
+                Object obj;
+                if (parseLines.ElementAt(i).Value.TryParseLineToConstructorArguments(constructorsParsePropperties, out List<object> constructorArguments))
+                    obj = (Object)System.Activator.CreateInstance(type, constructorArguments.ToArray());
                 else
-                    obj = System.Activator.CreateInstance(type);
+                    obj = (Object)System.Activator.CreateInstance(type);
 
-                objectsData.Add((Object)obj);
-            }
-        }
-
-        private bool TryParseLineToConstructorArguments(string[] columnsText, out object[] consructorArguments)
-        {
-            consructorArguments = null;
-
-            if (constructorsParsePropperties.MarkerAttribute == null)
-                return false;
-
-            LoadConstructorMarkerAttribute marker = constructorsParsePropperties.MarkerAttribute;
-            ParameterInfo[] parameters = marker.ArgumentsInfos;
-
-            Debug.Log($"Param: {parameters.Length}");
-            List<object> outArguments = new();
-
-            for (int i = 0; i < marker.Columns.Length; i++)
-            {
-                int column = marker.Columns[i];
-
-                if (column < 0 || column > columnsText.Length - 1)
+                if (obj.TryGetFields(out List<FieldsStruct> outFieldsMarkes, true, true))
                 {
-                    Debug.LogError($"Parse Error | Column {column} Not Found");
-                    return false;
+
                 }
 
-                System.Type type = parameters[i].ParameterType;
-
-                Debug.Log($"Parse: {columnsText[column]} | Column: {column} | Type: {type}");
-                if (columnsText[column].TryParseByType(type, out object arrayObj))
-                    outArguments.Add(arrayObj);
+                objectsData.Add(obj);
             }
-
-            consructorArguments = outArguments.ToArray();
-            return true;
         }
 
         #endregion
