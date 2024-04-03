@@ -14,8 +14,10 @@ namespace GoogleSheetLoaderSystem
         Texture2D IconTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         Texture2D LogoTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(headerPath);
 
-        const string sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDazInDHxGwQOGH0udx0Z_N8i9NID-oEo50eRnK6aVY7cGsHY2bxMwHd5tchnq1jO9I8OgqsKmSLt3/pub?gid=0&single=true&output=csv";
+        string sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDazInDHxGwQOGH0udx0Z_N8i9NID-oEo50eRnK6aVY7cGsHY2bxMwHd5tchnq1jO9I8OgqsKmSLt3/pub?gid=0&single=true&output=csv";
         static bool inProgress;
+
+        private Vector2 urlSrollRect = Vector2.zero;
 
         public static event Action<string> LoadCallback;
 
@@ -25,7 +27,7 @@ namespace GoogleSheetLoaderSystem
             GoogleSheetLoaderWindow window = GetWindow<GoogleSheetLoaderWindow>();
             window.titleContent = new GUIContent("Google Sheet Loader Window");
 
-            window.maxSize = new Vector2(400f, 250f);   
+            window.maxSize = new Vector2(400f, 250f);
             window.minSize = window.maxSize;
 
             inProgress = false;
@@ -35,36 +37,73 @@ namespace GoogleSheetLoaderSystem
         {
             WindowSupports.DrawLogo(LogoTexture, IconTexture);
 
-            GUILayout.Space(85);
+            GUILayout.BeginVertical(EditorStyles.helpBox);
 
-            GUILayout.BeginVertical("HelpBox");
             GUILayout.Space(5);
 
-            if (!inProgress)
+            DrawSheetUrl();
+
+            GUILayout.Space(10);
+
+            if (!inProgress && GUILayout.Button("Load Sheet"))
+                Load(sheetURL);
+
+            if (inProgress && GUILayout.Button("Stop Loading"))
             {
-                if (GUILayout.Button("Load Sheet"))
-                    Load();
+
             }
-            else
+
+            GUILayout.Space(5);
+            GUILayout.EndVertical();
+
+            if (inProgress)
+            {
+                GUILayout.Space(10);
+
+                GUILayout.BeginVertical("HelpBox");
+                GUILayout.Space(5);
+
+                GUI.backgroundColor = Color.white;
+                GUI.contentColor = Color.black;
+
+                GUILayout.Label("Load In Progress", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 12));
+
+                GUI.backgroundColor = Color.white;
+                GUI.contentColor = Color.white;
+
+                GUILayout.Space(5);
+                GUILayout.EndVertical();
+            }
+        }
+
+        private void DrawSheetUrl()
+        {
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+
+            urlSrollRect = EditorGUILayout.BeginScrollView(urlSrollRect, GUILayout.Height(60f));
+
+            sheetURL = EditorGUILayout.TextField(sheetURL);
+
+            if (!string.IsNullOrWhiteSpace(sheetURL))
             {
                 GUI.backgroundColor = Color.white;
                 GUI.contentColor = Color.black;
 
-                GUILayout.Label("Load In Progress", WindowSupports.GetStyle(TextAnchor.MiddleCenter, fontSize: 12));
+                GUILayout.Label(sheetURL);
 
                 GUI.backgroundColor = Color.white;
                 GUI.contentColor = Color.white;
             }
 
-            GUILayout.Space(5);
+            EditorGUILayout.EndScrollView();
             GUILayout.EndVertical();
         }
 
-        private static async void Load()
+        private static async void Load(string url)
         {
             inProgress = true;
 
-            using var www = UnityWebRequest.Get(sheetURL);
+            using var www = UnityWebRequest.Get(url);
             var operation = www.SendWebRequest();
 
             while (!operation.isDone)

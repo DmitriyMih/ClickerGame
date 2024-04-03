@@ -101,8 +101,6 @@ namespace GoogleSheetLoaderSystem
         {
             WindowSupports.DrawLogo(LogoTexture, IconTexture);
 
-            GUILayout.Space(85);
-
             DisplayReconnect();
 
             mainScrollPosition = EditorGUILayout.BeginScrollView(mainScrollPosition);

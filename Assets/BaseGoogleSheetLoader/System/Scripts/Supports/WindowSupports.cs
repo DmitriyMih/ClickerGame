@@ -31,6 +31,8 @@ namespace GoogleSheetLoaderSystem
             GUI.DrawTexture(rect, iconTexture);
             if (GUI.Button(rect, "", new GUIStyle()))
                 Application.OpenURL(publisherUrl);
+
+            GUILayout.Space(85);
         }
 
         public static GUIStyle GetStyle(TextAnchor textAnchor = TextAnchor.MiddleLeft, FontStyle fontStyle = FontStyle.Normal, int fontSize = 12)
