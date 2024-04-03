@@ -4,14 +4,14 @@ using System.Reflection;
 using UnityEngine;
 using System;
 
-namespace SimpleResourcesSystem.ResourceManagementSystem
+namespace GoogleSheetLoaderSystem
 {
     using FieldsStruct = MarkersStorage<LoadMarkerAttribute, FieldInfo>;
     using ConstructorStruct = MarkersStorage<LoadConstructorMarkerAttribute, ConstructorInfo>;
     using Object = UnityEngine.Object;
 
     public struct MarkersStorage<TAttribute, TMember>
-        where TAttribute : System.Attribute
+        where TAttribute : Attribute
         where TMember : MemberInfo
     {
         public TAttribute MarkerAttribute;
@@ -26,6 +26,8 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
     public static class ConverterSupports
     {
+        #region Parse Metods
+
         public static bool TryParseLineToFields(this string[] columnsText, Dictionary<int, FieldsStruct> propperties, out Dictionary<int, object> outFieldsValues)
         {
             outFieldsValues = new();
@@ -102,7 +104,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             if (type.IsArray)
             {
-                List<string> elements = str.Split(",", System.StringSplitOptions.None).ToList();
+                List<string> elements = str.Split(",", StringSplitOptions.None).ToList();
                 List<object> outArray = new();
 
                 Type elementType = type.GetElementType();
@@ -123,11 +125,13 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             else
                 outObj = Convert.ChangeType(str, type);
 
-            //Debug.Log($"Parse Out: {outObj} | Type: {outObj.GetType()}");
             return outObj != null;
         }
 
-        //  2.1
+        #endregion
+
+        #region Get Parsing Metods
+
         public static (bool, bool) GetParsingPropperties(this Object targetClass,
             out ConstructorStruct constructorParsePropperties,
             out Dictionary<int, FieldsStruct> fieldsParsePropperties, bool showOutput)
@@ -157,7 +161,6 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             return (hasConstructors, hasFields);
         }
 
-        //  2.1.1
         private static bool TryGetConstructors(this Object targetClass, out List<ConstructorStruct> markersStorages, bool isShowProcess = false)
         {
             ConstructorInfo[] ctors = targetClass.GetType().GetConstructors();
@@ -216,7 +219,10 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             return targetConstructor.MarkerAttribute != null;
         }
 
-        //  Google Sheet
+        #endregion
+
+        #region Sheet Parsing Metods
+
         public static bool CheckRowsForData(this List<string> rows)
         {
             for (int i = 0; i < rows.Count; i++)
@@ -231,7 +237,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         public static void ParseStringToColumns(this string line, out List<string> outColumns)
         {
-            List<string> columns = line.Split(",", System.StringSplitOptions.None).ToList();
+            List<string> columns = line.Split(",", StringSplitOptions.None).ToList();
 
             bool findComplexString = false;
             int complexStringId = -1;
@@ -286,7 +292,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         public static string ClearingGoogleSheetMarkup(string row)
         {
-            List<string> tempSplit = row.Trim().Split('"', System.StringSplitOptions.None).ToList();
+            List<string> tempSplit = row.Trim().Split('"', StringSplitOptions.None).ToList();
             string outString = "";
 
             if (tempSplit[0].Length == 0)
@@ -311,16 +317,18 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             return outString;
         }
 
+        #endregion
+
         #region Reflection Metods
 
-        private static bool TryGetCustomAttribute<TAttribute>(this MemberInfo field, out TAttribute attribute) where TAttribute : System.Attribute
+        private static bool TryGetCustomAttribute<TAttribute>(this MemberInfo field, out TAttribute attribute) where TAttribute : Attribute
         {
             attribute = field.GetCustomAttribute<TAttribute>();
             return attribute != null;
         }
 
         public static bool TryGetCustomAttributes<TMember, TAttribute>(TMember[] memberInfos, out List<MarkersStorage<TAttribute, TMember>> markersStorage)
-            where TAttribute : System.Attribute
+            where TAttribute : Attribute
             where TMember : MemberInfo
         {
             markersStorage = new();
@@ -347,7 +355,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         }
 
         public static void OutputMemberDictionary<TAttribute, TMember>(Dictionary<TMember, TAttribute> pairs, string keyTitle, string valueTitle, bool isShow = false)
-                where TAttribute : System.Attribute
+                where TAttribute : Attribute
                 where TMember : MemberInfo
         {
             for (int i = 0; i < pairs.Count; i++)

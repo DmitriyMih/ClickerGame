@@ -4,33 +4,23 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 
-namespace SimpleResourcesSystem.ResourceManagementSystem
+namespace GoogleSheetLoaderSystem
 {
     using FieldsStruct = MarkersStorage<LoadMarkerAttribute, FieldInfo>;
     using ConstructorsStruct = MarkersStorage<LoadConstructorMarkerAttribute, ConstructorInfo>;
 
-    public sealed class SimpleGoogleSheetsParserWindow : BaseParserWindow
+    public sealed class SimpleGoogleSheetsParserWindow : EditorWindow
     {
         private static Vector2 windowSizeMin = new Vector2(450f, 600f);
         private static Vector2 windowSizeMax = new Vector2(600f, 900f);
 
-        const string publisherUrl = "https://assetstore.unity.com/publishers/98518?preview=1";
-
-        const string windowTitle = "Simple Google Sheets Parser";
-        const string headerPath = "Assets/BaseGoogleSheetLoader/System/ParserHeader.png";
-        const string iconPath = "Assets/BaseGoogleSheetLoader/System/LogoIcon.png";
-
-        Color backgroundColor = new Color(1f, 0.96f, 0.84f, 1f);
-
-        int widthOffcetLeft = 65;
-        int widthOffcetRight = 10;
-
-        int headerHeight = 75;
-        int heightOffcet = 5;
+        const string headerPath = "Assets/BaseGoogleSheetLoader/System/Sprites/ParserHeader.png";
+        const string iconPath = "Assets/BaseGoogleSheetLoader/System/Sprites/LogoIcon.png";
 
         Texture2D IconTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         Texture2D LogoTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(headerPath);
 
+        private string callbackText;
         Dictionary<string, string[]> parseLines = new();
 
         private Vector2 mainScrollPosition = Vector2.zero;
@@ -52,21 +42,34 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         public SimpleGoogleSheetsParserWindow()
         {
-            titleText = windowTitle;
             mainScrollPosition = Vector2.zero;
+            sheetOutputScrollPosition = Vector2.zero;
+            outputProppertiesScrollPosition = Vector2.zero;
+            sheetItemsScrollPosition = Vector2.zero;
+
+            Reconnect();
         }
 
-        [MenuItem("My Tools/Simple Resources Item Info Converter Window")]
+        private void OnDisable() => GoogleSheetLoaderWindow.LoadCallback -= LoadCallback;
+
+        [MenuItem("My Tools/Simple Google Sheets Parser")]
         public static void ShowWindow()
         {
-            OpenWindow(windowTitle, out SimpleGoogleSheetsParserWindow window);
+            SimpleGoogleSheetsParserWindow window = GetWindow<SimpleGoogleSheetsParserWindow>();
+            window.titleContent = new GUIContent("Simple Google Sheets Parser");
+            
             window.maxSize = windowSizeMax;
             window.minSize = windowSizeMin;
         }
 
-        protected override void Reconnect()
+        private void Reconnect()
         {
-            base.Reconnect();
+            GoogleSheetLoaderWindow.LoadCallback -= LoadCallback;
+
+            callbackText = default;
+
+            GoogleSheetLoaderWindow.LoadCallback += LoadCallback;
+            Debug.Log("Reconnect");
 
             sheetOutputScrollPosition = Vector2.zero;
             isShowSheetOutput = false;
@@ -76,25 +79,10 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             objectsData.Clear();
         }
 
-        #region Draw Header
-
-        private void DrawLogo()
+        private void LoadCallback(string callback)
         {
-            Rect headerBackground = new Rect(0, 0, Screen.width, Screen.height);
-
-            Texture2D tex = new Texture2D(1, 1);
-            tex.SetPixel(0, 0, backgroundColor);
-            tex.Apply();
-            GUI.DrawTexture(headerBackground, tex);
-
-            Rect headerRect = new Rect(widthOffcetLeft, heightOffcet, Screen.width - widthOffcetRight - widthOffcetLeft, headerHeight - heightOffcet * 2);
-            GUI.DrawTexture(headerRect, LogoTexture, ScaleMode.ScaleToFit);
-
-            Rect rect = new Rect(5, (headerHeight - 60) / 2, 60, 60);
-
-            GUI.DrawTexture(rect, IconTexture);
-            if (GUI.Button(rect, "", new GUIStyle()))
-                Application.OpenURL(publisherUrl);
+            callbackText = callback;
+            Debug.Log($"Load Callback {callback}");
         }
 
         private void DisplayReconnect()
@@ -109,11 +97,9 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             GUILayout.EndVertical();
         }
 
-        #endregion
-
-        protected override void DisplayGUI()
+        private void OnGUI()
         {
-            DrawLogo();
+            WindowSupports.DrawLogo(LogoTexture, IconTexture);
 
             GUILayout.Space(85);
 
@@ -204,15 +190,12 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
         private void DisplayPropperties()
         {
-            //GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(false));
             GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(false));
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Get Parsing Propperties") && targetObject != null)
                 targetObject.GetParsingPropperties(out constructorsParsePropperties, out fieldsParsePropperties, true);
-
-            //targetObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
 
             Object tempObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
 
@@ -314,7 +297,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 //GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxConstructor - 8.5f));
                 GUILayout.Space(2.5f);
 
-                GUILayout.Label($"Constructor Propperties: {constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+                GUILayout.Label($"Constructor Propperties: {constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length}", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
 
                 GUILayout.Space(2.5f);
 
@@ -330,7 +313,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 //GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxConstructor));
                 GUILayout.Space(2.5f);
 
-                GUILayout.Label($"Fields Propperties: {fieldsParsePropperties.Count}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+                GUILayout.Label($"Fields Propperties: {fieldsParsePropperties.Count}", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
 
                 GUILayout.Space(2.5f);
 
@@ -470,7 +453,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 GUILayout.Space(2.5f);
 
                 string[] rows = parseLines.ElementAt(l).Value;
-                GUILayout.Label($"Line: {l} | Columns: {rows.Length}", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+                GUILayout.Label($"Line: {l} | Columns: {rows.Length}", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
                 GUILayout.Space(2.5f);
 
                 for (int r = 0; r < rows.Length; r++)
@@ -504,7 +487,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 GUILayout.BeginVertical(EditorStyles.helpBox);
                 GUILayout.Space(5f);
 
-                GUILayout.Label("Warnings", GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+                GUILayout.Label("Warnings", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
                 DrawWarnings(outWarnings);
 
                 GUILayout.Space(5f);
