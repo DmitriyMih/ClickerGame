@@ -48,7 +48,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         ConstructorsStruct constructorsParsePropperties = new();
         Dictionary<int, FieldsStruct> fieldsParsePropperties = new();
 
-        DataStruct dataStruct = new();
+        List<Object> objectsData = new();
 
         public SimpleGoogleSheetsParserWindow()
         {
@@ -73,8 +73,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             ResetParseItems();
 
-            dataStruct.DataObjects = null;
-            dataStruct.ObjectsType = null;
+            objectsData.Clear();
         }
 
         #region Draw Header
@@ -567,7 +566,6 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
                 GUILayout.Label(warnings[i]);
         }
 
-        List<Object> objectsData = new();
         //  4.3
         private void ParseLinesToDataItems()
         {
@@ -576,18 +574,24 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
             for (int i = 0; i < parseLines.Count; i++)
             {
-                Object obj;
-                if (parseLines.ElementAt(i).Value.TryParseLineToConstructorArguments(constructorsParsePropperties, out List<object> constructorArguments))
-                    obj = (Object)System.Activator.CreateInstance(type, constructorArguments.ToArray());
+                Object currentObj;
+                if (parseLines.ElementAt(i).Value.TryParseLineToConstructorArguments(constructorsParsePropperties, out object[] constructorArguments))
+                    currentObj = (Object)System.Activator.CreateInstance(type, constructorArguments);
                 else
-                    obj = (Object)System.Activator.CreateInstance(type);
+                    currentObj = (Object)System.Activator.CreateInstance(type);
 
-                if (obj.TryGetFields(out List<FieldsStruct> outFieldsMarkes, true, true))
+                if (parseLines.ElementAt(i).Value.TryParseLineToFields(fieldsParsePropperties, out Dictionary<int, object> outFieldsValues))
                 {
+                    for (int m = 0; m < outFieldsValues.Count; m++)
+                    {
+                        int markerColumn = outFieldsValues.ElementAt(m).Key;
 
+                        if (fieldsParsePropperties.ContainsKey(markerColumn))
+                            fieldsParsePropperties[markerColumn].MemberInfo.SetValue(currentObj, outFieldsValues.ElementAt(m).Value);
+                    }
                 }
 
-                objectsData.Add(obj);
+                objectsData.Add(currentObj);
             }
         }
 

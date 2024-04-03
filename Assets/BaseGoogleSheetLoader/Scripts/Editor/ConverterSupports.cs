@@ -24,30 +24,40 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
         }
     }
 
-    public struct DataStruct
-    {
-        public List<object> DataObjects;
-        public Type ObjectsType;
-
-        public DataStruct(List<object> dataObjects, Type objectsType)
-        {
-            DataObjects = new(dataObjects);
-            ObjectsType = objectsType;
-        }
-    }
-
     public static class ConverterSupports
     {
-        public static void ParseToFields(this string[] columnsText, Dictionary<int, FieldsStruct> propperties, out Dictionary<int, object> outFieldsValues)
+        public static bool TryParseLineToFields(this string[] columnsText, Dictionary<int, FieldsStruct> propperties, out Dictionary<int, object> outFieldsValues)
         {
-            outFieldsValues = null;
+            outFieldsValues = new();
 
+            for (int i = 0; i < propperties.Count; i++)
+            {
+                int column = propperties.ElementAt(i).Key;
+                Type type = propperties.ElementAt(i).Value.MarkerAttribute.FieldArgument;
 
+                if (column < 0 || column > columnsText.Length - 1)
+                {
+                    Debug.Log($"Parse Error | Column {column} Not Found");
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(columnsText[column]))
+                {
+                    Debug.Log($"Parse Warning | Text In Column {column} Is Null");
+                    continue;
+                }
+
+                if (columnsText[column].TryParseByType(type, out object outObj))
+                    outFieldsValues.Add(column, outObj);
+            }
+
+            return outFieldsValues.Count > 0;
         }
 
-        public static bool TryParseLineToConstructorArguments(this string[] columnsText, ConstructorStruct constructor, out List<object> consructorArguments)
+        public static bool TryParseLineToConstructorArguments(this string[] columnsText, ConstructorStruct constructor, out object[] consructorArguments)
         {
-            consructorArguments = new();
+            consructorArguments = null;
+            List<object> outObjects = new();
 
             if (constructor.MarkerAttribute == null)
                 return false;
@@ -60,20 +70,26 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             for (int i = 0; i < marker.Columns.Length; i++)
             {
                 int column = marker.Columns[i];
+                Type type = parameters[i].ParameterType;
 
                 if (column < 0 || column > columnsText.Length - 1)
                 {
-                    Debug.LogError($"Parse Error | Column {column} Not Found");
+                    Debug.Log($"Parse Error | Column {column} Not Found");
                     return false;
                 }
 
-                System.Type type = parameters[i].ParameterType;
+                if (string.IsNullOrWhiteSpace(columnsText[column]))
+                {
+                    Debug.Log($"Parse Warning | Text In Column {column} Is Null");
+                    continue;
+                }
 
                 Debug.Log($"Parse: {columnsText[column]} | Column: {column} | Type: {type}");
-                if (columnsText[column].TryParseByType(type, out object arrayObj))
-                    consructorArguments.Add(arrayObj);
+                if (columnsText[column].TryParseByType(type, out object outObj))
+                    outObjects.Add(outObj);
             }
 
+            consructorArguments = outObjects.ToArray();
             return true;
         }
 
@@ -84,7 +100,7 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
             if (string.IsNullOrWhiteSpace(str))
                 return false;
 
-            if (type.GetType().IsArray)
+            if (type.IsArray)
             {
                 List<string> elements = str.Split(",", System.StringSplitOptions.None).ToList();
                 List<object> outArray = new();
@@ -93,16 +109,21 @@ namespace SimpleResourcesSystem.ResourceManagementSystem
 
                 for (int i = 0; i < elements.Count; i++)
                 {
-                    var element = Convert.ChangeType(elements[i], elementType);
+                    string e = elements[i].Trim();
+                    object element = Convert.ChangeType(e, elementType);
                     outArray.Add(element);
                 }
 
-                outObj = outArray;
+                Array array = Array.CreateInstance(elementType, outArray.Count);
+                for (int i = 0; i < outArray.Count; i++)
+                    array.SetValue(outArray[i], i);
+
+                outObj = array;
             }
             else
                 outObj = Convert.ChangeType(str, type);
 
-            Debug.Log($"Parse Out: {outObj} | Type: {outObj.GetType()}");
+            //Debug.Log($"Parse Out: {outObj} | Type: {outObj.GetType()}");
             return outObj != null;
         }
 
