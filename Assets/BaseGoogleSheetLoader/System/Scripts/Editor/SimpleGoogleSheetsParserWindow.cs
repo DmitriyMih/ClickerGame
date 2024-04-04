@@ -29,9 +29,12 @@ namespace GoogleSheetLoaderSystem
         private Vector2 outputProppertiesScrollPosition = Vector2.zero;
         private Vector2 sheetItemsScrollPosition = Vector2.zero;
 
+        private bool isShowSettings = false;
+
         private bool isShowSheetOutput = false;
         private bool isParsingProppetiesOutput = false;
         private bool isShowSheetItems = false;
+        private bool isShowObjectsData = false;
 
         private Object targetObject;
 
@@ -40,16 +43,7 @@ namespace GoogleSheetLoaderSystem
 
         List<Object> objectsData = new();
 
-        public SimpleGoogleSheetsParserWindow()
-        {
-            mainScrollPosition = Vector2.zero;
-            sheetOutputScrollPosition = Vector2.zero;
-            outputProppertiesScrollPosition = Vector2.zero;
-            sheetItemsScrollPosition = Vector2.zero;
-
-            Reconnect();
-        }
-
+        public SimpleGoogleSheetsParserWindow() => Reconnect();
         private void OnDisable() => GoogleSheetLoaderWindow.LoadCallback -= LoadCallback;
 
         [MenuItem("My Tools/Simple Google Sheets Parser")]
@@ -57,19 +51,17 @@ namespace GoogleSheetLoaderSystem
         {
             SimpleGoogleSheetsParserWindow window = GetWindow<SimpleGoogleSheetsParserWindow>();
             window.titleContent = new GUIContent("Simple Google Sheets Parser");
-            
+
             window.maxSize = windowSizeMax;
             window.minSize = windowSizeMin;
         }
 
         private void Reconnect()
         {
+            callbackText = null;
+
             GoogleSheetLoaderWindow.LoadCallback -= LoadCallback;
-
-            callbackText = default;
-
             GoogleSheetLoaderWindow.LoadCallback += LoadCallback;
-            Debug.Log("Reconnect");
 
             sheetOutputScrollPosition = Vector2.zero;
             isShowSheetOutput = false;
@@ -85,23 +77,11 @@ namespace GoogleSheetLoaderSystem
             Debug.Log($"Load Callback {callback}");
         }
 
-        private void DisplayReconnect()
-        {
-            GUILayout.BeginVertical("HelpBox");
-            GUILayout.Space(5);
-
-            if (GUILayout.Button("Reconect To Loader"))
-                Reconnect();
-
-            GUILayout.Space(5);
-            GUILayout.EndVertical();
-        }
-
         private void OnGUI()
         {
             WindowSupports.DrawLogo(LogoTexture, IconTexture);
 
-            DisplayReconnect();
+            DrawSettingsBlock();
 
             mainScrollPosition = EditorGUILayout.BeginScrollView(mainScrollPosition);
 
@@ -112,59 +92,89 @@ namespace GoogleSheetLoaderSystem
             EditorGUILayout.EndScrollView();
         }
 
+        #region Main Display/Settings Block
+
+        private void DrawSettingsBlock()
+        {
+            GUILayout.BeginVertical("HelpBox");
+            GUILayout.Space(5);
+
+            if (GUILayout.Button("Reconect To Loader"))
+                Reconnect();
+
+            GUILayout.Space(5);
+
+            WindowSupports.SetColorState(true);
+
+            isShowSettings = GUILayout.Toggle(isShowSettings, "Show Settings");
+
+            WindowSupports.SetColorState(false);
+
+            if (!isShowSettings)
+            {
+                GUILayout.Space(5);
+                GUILayout.EndVertical();
+                return;
+            }
+
+            GUILayout.Space(5);
+            GUILayout.EndVertical();
+        }
+
+        #endregion
+
         #region Main Display
 
         private void ContentDisplay()
         {
-            bool hasCallbackText = callbackText != null && callbackText != "";
+            bool hasCallbackText = !string.IsNullOrWhiteSpace(callbackText);
 
-            DisplayOutput(hasCallbackText);
-
-            GUILayout.Space(10);
-
-            DisplayPropperties();
+            DisplayCallbackText(hasCallbackText);
 
             GUILayout.Space(10);
 
-            DisplayOutputParsing(hasCallbackText);
+            DisplayProppertiesBlock();
 
             GUILayout.Space(10);
 
-            DisplayParsingAndCreate();
+            DisplayInititalizationParsingBlock(hasCallbackText);
+
+            GUILayout.Space(10);
+
+            DisplayParsingAndCreateBlock();
         }
 
         #endregion
 
         #region Main Display/Block 1
 
-        private void DisplayOutput(bool hasCallbackText)
+        private void DisplayCallbackText(bool hasCallbackText)
         {
-            if (hasCallbackText)
-            {
-                GUILayout.Space(10);
+            if (!hasCallbackText)
+                return;
 
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-                GUILayout.Space(5f);
+            GUILayout.Space(10);
 
-                DisplaySheetOutput();
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.Space(2.5f);
 
-                GUILayout.Space(5f);
-                GUILayout.EndVertical();
-            }
+            DisplaySheetOutput();
+
+            GUILayout.Space(2.5f);
+            GUILayout.EndVertical();
         }
 
         //  1.1
         private void DisplaySheetOutput()
         {
-            GUI.backgroundColor = Color.white;
-            GUI.contentColor = Color.black;
+            WindowSupports.SetColorState(true);
 
             isShowSheetOutput = GUILayout.Toggle(isShowSheetOutput, "Show Sheet Output");
 
             if (!isShowSheetOutput)
             {
-                GUI.backgroundColor = Color.white;
-                GUI.contentColor = Color.white;
+                GUILayout.Space(2.5f);
+                WindowSupports.SetColorState(false);
                 return;
             }
 
@@ -178,20 +188,20 @@ namespace GoogleSheetLoaderSystem
             EditorGUILayout.EndScrollView();
             GUILayout.EndVertical();
 
-            GUI.backgroundColor = Color.white;
-            GUI.contentColor = Color.white;
+            WindowSupports.SetColorState(false);
         }
 
         #endregion
 
         #region Main Display/Block 2
 
-        private void DisplayPropperties()
+        private void DisplayProppertiesBlock()
         {
             GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(false));
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
+
             if (GUILayout.Button("Get Parsing Propperties") && targetObject != null)
                 targetObject.GetParsingPropperties(out constructorsParsePropperties, out fieldsParsePropperties, true);
 
@@ -214,7 +224,7 @@ namespace GoogleSheetLoaderSystem
             GUILayout.EndVertical();
         }
 
-        //  2.0
+        //  2.1
         private void ClearParsingPropperties()
         {
             constructorsParsePropperties.MarkerAttribute = null;
@@ -233,8 +243,7 @@ namespace GoogleSheetLoaderSystem
                 && fieldsParsePropperties.Count == 0)
                 return;
 
-            GUI.backgroundColor = Color.white;
-            GUI.contentColor = Color.black;
+            WindowSupports.SetColorState(true);
 
             GUILayout.Space(5);
 
@@ -242,26 +251,66 @@ namespace GoogleSheetLoaderSystem
 
             if (!isParsingProppetiesOutput)
             {
-                GUI.backgroundColor = Color.white;
-                GUI.contentColor = Color.white;
-                //GUILayout.Space(5);
+                WindowSupports.SetColorState(false);
                 return;
             }
 
             GUILayout.Space(5);
 
-            float min = 0f;
-            float max = 0f;
+            GetParseBlockHeight(out float min, out float max, out float maxConstructor, out float maxFields, out float offcet);
 
-            float headerHeight = 4f + 6f + 5f + 21f;
-            //float headerHeight = 35f;
+            GUILayout.Space(5f);
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            outputProppertiesScrollPosition = EditorGUILayout.BeginScrollView(outputProppertiesScrollPosition, GUILayout.ExpandHeight(false), GUILayout.MinHeight(min), GUILayout.MaxHeight(max + offcet));
+
+            if (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxConstructor), GUILayout.ExpandHeight(false));
+                GUILayout.Space(2.5f);
+
+                GUILayout.Label($"Constructor Propperties: {constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length}", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+
+                GUILayout.Space(2.5f);
+
+                DisplayConstructorPropperties(constructorsParsePropperties);
+
+                GUILayout.Space(2.5f);
+                GUILayout.EndVertical();
+            }
+
+            if (fieldsParsePropperties.Count > 0)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxFields), GUILayout.ExpandHeight(false));
+                GUILayout.Space(2.5f);
+
+                GUILayout.Label($"Fields Propperties: {fieldsParsePropperties.Count}", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+
+                GUILayout.Space(2.5f);
+
+                DisplayFieldsPropperties(fieldsParsePropperties);
+
+                GUILayout.Space(2.5f);
+                GUILayout.EndVertical();
+            }
+
+            EditorGUILayout.EndScrollView();
+            GUILayout.EndVertical();
+
+            WindowSupports.SetColorState(false);
+        }
+
+        //  2.2.0
+        private void GetParseBlockHeight(out float min, out float max, out float maxConstructor, out float maxFields, out float offcet)
+        {
+            offcet = 0f;
+
+            float headerHeight = 4f + 2.5f + 5f + 21f;
             float titleHeight = 20f;
 
             int elements = 1;
 
             float minConstructor = 0f;
-            float maxConstructor = 0f;
-            float offcet = 0f;
+            maxConstructor = 0f;
 
             if (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null)
             {
@@ -271,7 +320,7 @@ namespace GoogleSheetLoaderSystem
             }
 
             float minFields = 0f;
-            float maxFields = 0f;
+            maxFields = 0f;
 
             if (fieldsParsePropperties.Count > 0)
             {
@@ -282,50 +331,6 @@ namespace GoogleSheetLoaderSystem
 
             min = minConstructor + minFields;
             max = maxConstructor + maxFields;
-
-            GUILayout.Space(5f);
-            GUILayout.BeginVertical(EditorStyles.helpBox);
-            outputProppertiesScrollPosition = EditorGUILayout.BeginScrollView(outputProppertiesScrollPosition, GUILayout.ExpandHeight(false), GUILayout.MinHeight(min), GUILayout.MaxHeight(max + offcet));
-
-            //GUILayout.ExpandHeight(false), GUILayout.MinHeight(minHeight), GUILayout.MaxHeight(maxHeight));
-
-            if (constructorsParsePropperties.MarkerAttribute != null && constructorsParsePropperties.MemberInfo != null)
-            {
-                GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxConstructor), GUILayout.ExpandHeight(false));
-                //GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxConstructor - 8.5f));
-                GUILayout.Space(2.5f);
-
-                GUILayout.Label($"Constructor Propperties: {constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length}", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
-
-                GUILayout.Space(2.5f);
-
-                DisplayConstructorPropperties(constructorsParsePropperties);
-
-                GUILayout.Space(6f);
-                GUILayout.EndVertical();
-            }
-
-            if (fieldsParsePropperties.Count > 0)
-            {
-                GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxFields), GUILayout.ExpandHeight(false));
-                //GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(maxConstructor));
-                GUILayout.Space(2.5f);
-
-                GUILayout.Label($"Fields Propperties: {fieldsParsePropperties.Count}", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
-
-                GUILayout.Space(2.5f);
-
-                DisplayFieldsPropperties(fieldsParsePropperties);
-
-                GUILayout.Space(6f);
-                GUILayout.EndVertical();
-            }
-
-            EditorGUILayout.EndScrollView();
-            GUILayout.EndVertical();
-
-            GUI.backgroundColor = Color.white;
-            GUI.contentColor = Color.white;
         }
 
         //  2.2.1
@@ -351,14 +356,14 @@ namespace GoogleSheetLoaderSystem
 
         #region Main Display/Block 3
 
-        private void DisplayOutputParsing(bool hasCallbackText)
+        private void DisplayInititalizationParsingBlock(bool hasCallbackText)
         {
             if (hasCallbackText)
             {
                 GUILayout.BeginVertical(EditorStyles.helpBox);
                 GUILayout.Space(5);
 
-                if (GUILayout.Button("Parse Output To Line Items"))
+                if (GUILayout.Button("Parse The Text On The Line"))
                     ParseText();
 
                 if (GUILayout.Button("Clear Parse Lines"))
@@ -374,12 +379,6 @@ namespace GoogleSheetLoaderSystem
 
         //  3.1
         private void ParseText()
-        {
-            ParseString();
-        }
-
-        //  3.1.1
-        private void ParseString()
         {
             parseLines.Clear();
 
@@ -397,10 +396,9 @@ namespace GoogleSheetLoaderSystem
 
                 if (!columns.CheckRowsForData())
                 {
-                    //Debug.Log($"Error | Line {lines[l]} Data Is Null");
+                    Debug.Log($"Error | Line {lines[l]} Data Is Null");
                     continue;
                 }
-
 
                 if (parseLines.ContainsKey(columns[0]))
                 {
@@ -424,8 +422,7 @@ namespace GoogleSheetLoaderSystem
         //  3.3
         private void DisplaySheetItems()
         {
-            GUI.backgroundColor = Color.white;
-            GUI.contentColor = Color.black;
+            WindowSupports.SetColorState(true);
 
             GUILayout.Space(5);
 
@@ -433,8 +430,7 @@ namespace GoogleSheetLoaderSystem
 
             if (!isShowSheetItems)
             {
-                GUI.backgroundColor = Color.white;
-                GUI.contentColor = Color.white;
+                WindowSupports.SetColorState(false);
                 return;
             }
 
@@ -447,77 +443,95 @@ namespace GoogleSheetLoaderSystem
 
             for (int l = 0; l < parseLines.Count; l++)
             {
+                string[] rows = parseLines.ElementAt(l).Value;
+
                 GUILayout.BeginVertical(EditorStyles.helpBox);
                 GUILayout.Space(2.5f);
 
-                string[] rows = parseLines.ElementAt(l).Value;
                 GUILayout.Label($"Line: {l} | Columns: {rows.Length}", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+
                 GUILayout.Space(2.5f);
 
                 for (int r = 0; r < rows.Length; r++)
                     GUILayout.Label($"Column: {r} | {rows[r]}");
 
-                GUILayout.Space(6f);
+                GUILayout.Space(2.5f);
                 GUILayout.EndVertical();
             }
 
             EditorGUILayout.EndScrollView();
             GUILayout.EndVertical();
 
-            GUI.backgroundColor = Color.white;
-            GUI.contentColor = Color.white;
+            WindowSupports.SetColorState(false);
         }
 
         #endregion
 
         #region Main Display/Block 4
 
-        private void DisplayParsingAndCreate()
+        private void DisplayParsingAndCreateBlock()
         {
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.Space(5f);
 
-            if (!CheckByAvailable(out List<string> outWarnings))
+            bool hasAvailable = CheckByAvailable(out List<string> outWarnings);
+
+            if (!hasAvailable)
             {
-                GUI.backgroundColor = Color.white;
-                GUI.contentColor = Color.black;
+                WindowSupports.SetColorState(true);
 
                 GUILayout.BeginVertical(EditorStyles.helpBox);
-                GUILayout.Space(5f);
+                GUILayout.Space(2.5f);
 
-                GUILayout.Label("Warnings", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+                GUILayout.Label("Take The Steps:", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
                 DrawWarnings(outWarnings);
 
-                GUILayout.Space(5f);
+                GUILayout.Space(2.5f);
                 GUILayout.EndVertical();
 
-                GUILayout.Space(5f);
+                WindowSupports.SetColorState(false);
+            }
 
-                GUI.backgroundColor = Color.white;
-                GUI.contentColor = Color.white;
-            }
-            else
-            {
-                if (GUILayout.Button("Parse Lines To Data Items"))
-                {
-                    ParseLinesToDataItems();
-                }
-            }
+            GUILayout.Space(5f);
+
+            if (GUILayout.Button("Parse Lines To Data Items") && hasAvailable)
+                ParseLinesToDataItems();
 
             if (GUILayout.Button("Clear Items Data"))
                 objectsData.Clear();
 
-            GUILayout.Space(5f);
-            GUILayout.EndVertical();
-
-            for (int i = 0; i < objectsData.Count; i++)
+            if (objectsData.Count == 0)
             {
-                //Debug.Log($"{i} | {objects[i]} | Type: {objects[i].GetType()}");
-                EditorGUILayout.ObjectField(objectsData[i], typeof(Object));
+                GUILayout.Space(5f);
+                GUILayout.EndVertical();
+
+                return;
             }
 
-            GUI.backgroundColor = Color.white;
-            GUI.contentColor = Color.white;
+            GUILayout.Space(5f);
+
+            WindowSupports.SetColorState(true);
+
+            isShowObjectsData = GUILayout.Toggle(isShowObjectsData, "Show Data Items");
+
+            WindowSupports.SetColorState(false);
+
+            if (isShowObjectsData)
+            {
+                GUILayout.Space(5f);
+
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.Space(2.5f);
+
+                for (int i = 0; i < objectsData.Count; i++)
+                    EditorGUILayout.ObjectField(objectsData[i], typeof(Object));
+
+                GUILayout.Space(2.5f);
+                GUILayout.EndVertical();
+            }
+
+            GUILayout.Space(5f);
+            GUILayout.EndVertical();
         }
 
         //  4.1
@@ -526,16 +540,36 @@ namespace GoogleSheetLoaderSystem
             outWarnings = new();
 
             if (string.IsNullOrWhiteSpace(callbackText))
-                outWarnings.Add("Google Sheet Text Is Null");
-
-            if (targetObject == null)
-                outWarnings.Add("Target Object Is Null");
+            {
+                outWarnings.Add("Sheet Callback Text Is Null");
+                outWarnings.Add("Load Sheet In Sheet Loader Window");
+            }
 
             if (parseLines.Count == 0)
+            {
                 outWarnings.Add("Parse Strings Is Null");
 
+                if (string.IsNullOrWhiteSpace(callbackText))
+                    outWarnings.Add("Load Sheet In Sheet Loader Window\nParse Callback Text In Parser Window");
+                else
+                    outWarnings.Add("Parse Callback Text In Parser WIndow");
+            }
+
+            if (targetObject == null)
+            {
+                outWarnings.Add("Target Object Is Null");
+                outWarnings.Add("Select Target Object In Parser Window");
+            }
+
             if ((constructorsParsePropperties.MarkerAttribute == null || constructorsParsePropperties.MarkerAttribute.ArgumentsInfos.Length == 0) && fieldsParsePropperties.Count == 0)
+            {
                 outWarnings.Add("Parameters By Parse is Null");
+
+                if (targetObject == null)
+                    outWarnings.Add("Select Object In Parser Window\nParse Target Object In Parser Window");
+                else
+                    outWarnings.Add("Parse Target Object in Parser Window");
+            }
 
             return outWarnings.Count == 0;
         }
@@ -543,8 +577,19 @@ namespace GoogleSheetLoaderSystem
         //  4.2
         private void DrawWarnings(List<string> warnings)
         {
-            for (int i = 0; i < warnings.Count; i++)
-                GUILayout.Label(warnings[i]);
+            for (int i = 0; i < warnings.Count - 1; i += 2)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.Space(2.5f);
+
+                GUILayout.Label(warnings[i], WindowSupports.GetStyle(fontStyle: FontStyle.Normal));
+                GUILayout.Label(warnings[i + 1], WindowSupports.GetStyle(TextAnchor.MiddleRight, FontStyle.BoldAndItalic));
+
+                GUILayout.Space(2.5f);
+                GUILayout.EndVertical();
+
+                GUILayout.Space(5);
+            }
         }
 
         //  4.3

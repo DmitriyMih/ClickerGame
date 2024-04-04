@@ -14,6 +14,12 @@ namespace GoogleSheetLoaderSystem
         const int headerHeight = 75;
         const int heightOffcet = 5;
 
+        public static void SetColorState(bool state)
+        {
+            GUI.backgroundColor = state ? Color.white : Color.white;
+            GUI.contentColor = state ? Color.black : Color.white;
+        }
+
         public static void DrawLogo(Texture2D logoTexture, Texture2D iconTexture)
         {
             Rect headerBackground = new Rect(0, 0, Screen.width, Screen.height);
