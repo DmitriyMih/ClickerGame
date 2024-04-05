@@ -28,7 +28,7 @@ namespace GoogleSheetLoaderSystem
     {
         #region Parse Metods
 
-        public static bool TryParseLineToFields(this string[] columnsText, Dictionary<int, FieldsStruct> propperties, out Dictionary<int, object> outFieldsValues)
+        public static bool TryParseLineToFields(this string[] columnsText, Dictionary<int, FieldsStruct> propperties, out Dictionary<int, object> outFieldsValues, bool isShowProcess)
         {
             outFieldsValues = new();
 
@@ -39,13 +39,13 @@ namespace GoogleSheetLoaderSystem
 
                 if (column < 0 || column > columnsText.Length - 1)
                 {
-                    Debug.Log($"Parse Error | Column {column} Not Found");
+                    SupportLog.Log($"Parse Error | Column {column} Not Found",isShowProcess);
                     continue;
                 }
 
                 if (string.IsNullOrWhiteSpace(columnsText[column]))
                 {
-                    Debug.Log($"Parse Warning | Text In Column {column} Is Null");
+                    SupportLog.Log($"Parse Warning | Text In Column {column} Is Null",isShowProcess);
                     continue;
                 }
 
@@ -56,7 +56,7 @@ namespace GoogleSheetLoaderSystem
             return outFieldsValues.Count > 0;
         }
 
-        public static bool TryParseLineToConstructorArguments(this string[] columnsText, ConstructorStruct constructor, out object[] consructorArguments)
+        public static bool TryParseLineToConstructorArguments(this string[] columnsText, ConstructorStruct constructor, out object[] consructorArguments, bool isShowProcess)
         {
             consructorArguments = null;
             List<object> outObjects = new();
@@ -67,7 +67,7 @@ namespace GoogleSheetLoaderSystem
             LoadConstructorMarkerAttribute marker = constructor.MarkerAttribute;
             ParameterInfo[] parameters = marker.ArgumentsInfos;
 
-            Debug.Log($"Param: {parameters.Length}");
+            SupportLog.Log($"Params: {parameters.Length}",isShowProcess);
 
             for (int i = 0; i < marker.Columns.Length; i++)
             {
@@ -76,17 +76,17 @@ namespace GoogleSheetLoaderSystem
 
                 if (column < 0 || column > columnsText.Length - 1)
                 {
-                    Debug.Log($"Parse Error | Column {column} Not Found");
+                    SupportLog.LogError($"Parse Error | Column {column} Not Found", isShowProcess);
                     return false;
                 }
 
                 if (string.IsNullOrWhiteSpace(columnsText[column]))
                 {
-                    Debug.Log($"Parse Warning | Text In Column {column} Is Null");
+                    SupportLog.LogError($"Parse Warning | Text In Column {column} Is Null", isShowProcess);
                     continue;
                 }
 
-                Debug.Log($"Parse: {columnsText[column]} | Column: {column} | Type: {type}");
+                SupportLog.Log($"Parse: {columnsText[column]} | Column: {column} | Type: {type}", isShowProcess);
                 if (columnsText[column].TryParseByType(type, out object outObj))
                     outObjects.Add(outObj);
             }
@@ -235,7 +235,7 @@ namespace GoogleSheetLoaderSystem
         private static bool CheckStartComplexString(this string checkString) => checkString.Length > 0 && checkString[0] == '"';
         private static bool CheckEndComplexString(this string checkString) => checkString.Length > 0 && checkString[checkString.Length - 1] == '"';
 
-        public static void ParseStringToColumns(this string line, out List<string> outColumns)
+        public static void ParseStringToColumns(this string line, out List<string> outColumns, bool isShowProcess)
         {
             List<string> columns = line.Split(",", StringSplitOptions.None).ToList();
 
@@ -288,6 +288,7 @@ namespace GoogleSheetLoaderSystem
                 columns.RemoveAt(removeIndexes[i]);
 
             outColumns = new(columns);
+            SupportLog.Log($"Parse Line: {line} | Out Columns: {outColumns.Count}", isShowProcess);
         }
 
         public static string ClearingGoogleSheetMarkup(string row)
@@ -352,6 +353,12 @@ namespace GoogleSheetLoaderSystem
         {
             if (isShow)
                 Debug.Log(message);
+        }
+
+        public static void LogError(string message, bool isShow = true)
+        {
+            if (isShow)
+                Debug.LogError(message);
         }
 
         public static void OutputMemberDictionary<TAttribute, TMember>(Dictionary<TMember, TAttribute> pairs, string keyTitle, string valueTitle, bool isShow)

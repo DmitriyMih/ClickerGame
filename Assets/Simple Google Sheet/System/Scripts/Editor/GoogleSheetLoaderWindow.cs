@@ -8,8 +8,8 @@ namespace GoogleSheetLoaderSystem
 {
     public class GoogleSheetLoaderWindow : EditorWindow
     {
-        const string headerPath = "Assets/BaseGoogleSheetLoader/System/Sprites/LoaderHeader.png";
-        const string iconPath = "Assets/BaseGoogleSheetLoader/System/Sprites/LogoIcon.png";
+        const string headerPath = "Assets/Simple Google Sheet/System/Sprites/LoaderHeader.png";
+        const string iconPath = "Assets/Simple Google Sheet/System/Sprites/LogoIcon.png";
 
         Texture2D IconTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         Texture2D LogoTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(headerPath);

@@ -52,7 +52,7 @@ namespace GoogleSheetLoaderSystem
             GUILayout.Space(5f);
 
             toggleValue = GUILayout.Toggle(toggleValue, "", GUILayout.Width(15));
-            GUILayout.Label(label, WindowSupports.GetStyle(TextAnchor.MiddleLeft, FontStyle.Italic));
+            GUILayout.Label(label, WindowSupports.GetStyle(TextAnchor.MiddleLeft, FontStyle.BoldAndItalic));
 
             GUILayout.Space(5f);
             GUILayout.EndHorizontal();

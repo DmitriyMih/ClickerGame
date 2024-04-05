@@ -4,23 +4,15 @@ using System.Reflection;
 
 namespace GoogleSheetLoaderSystem
 {
-    using FieldsStruct = MarkersStorage<LoadMarkerAttribute, FieldInfo>;
-    using ConstructorsStruct = MarkersStorage<LoadConstructorMarkerAttribute, ConstructorInfo>;
-
     public sealed class SimpleParserFolderControllerWindow : EditorWindow
     {
-        const string headerPath = "Assets/BaseGoogleSheetLoader/System/Sprites/FolderControllerHeader.png";
-        const string iconPath = "Assets/BaseGoogleSheetLoader/System/Sprites/LogoIcon.png";
+        const string headerPath = "Assets/Simple Google Sheet/System/Sprites/FolderControllerHeader.png";
+        const string iconPath = "Assets/Simple Google Sheet/System/Sprites/LogoIcon.png";
 
         Texture2D IconTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         Texture2D LogoTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(headerPath);
 
         public SimpleParserFolderControllerWindow() => ReconnectToParser();
-
-        protected GUIStyle GetStyle(TextAnchor textAnchor = TextAnchor.MiddleLeft, FontStyle fontStyle = FontStyle.Normal, int fontSize = 12)
-        {
-            return new GUIStyle(GUI.skin.label) { alignment = textAnchor, fontStyle = fontStyle, fontSize = fontSize };
-        }
 
         [MenuItem("My Tools/Simple Parser Folder Controller Window")]
         public static void ShowWindow()
