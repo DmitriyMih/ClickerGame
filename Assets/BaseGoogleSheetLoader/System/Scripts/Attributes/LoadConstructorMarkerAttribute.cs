@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GoogleSheetLoaderSystem;
+using System;
 using System.Reflection;
 
 [AttributeUsage(AttributeTargets.Constructor, AllowMultiple = false)]
@@ -11,14 +12,14 @@ public class LoadConstructorMarkerAttribute : Attribute
 
     public LoadConstructorMarkerAttribute(params int[] columns) { Columns = columns; }
 
-    public void Initialization(ConstructorInfo constructorInfo, ParameterInfo[] argumentsInfos)
+    public void Initialization(ConstructorInfo constructorInfo, ParameterInfo[] argumentsInfos, bool isShowProcess)
     {
         ConstructorInfo = constructorInfo;
         ArgumentsInfos = argumentsInfos;
 
-        UnityEngine.Debug.Log($"Constructor Info: {constructorInfo}");
+        SupportLog.Log($"Constructor Info: {constructorInfo}", isShowProcess);
 
         for (int i = 0; i < argumentsInfos.Length; i++)
-            UnityEngine.Debug.Log($"Argument Info {i}: {argumentsInfos[i]}");
+            SupportLog.Log($"Argument Info {i}: {argumentsInfos[i]}", isShowProcess);
     }
 }

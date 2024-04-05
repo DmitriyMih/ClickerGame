@@ -45,5 +45,17 @@ namespace GoogleSheetLoaderSystem
         {
             return new GUIStyle(GUI.skin.label) { alignment = textAnchor, fontStyle = fontStyle, fontSize = fontSize };
         }
+
+        public static void DrawToggle(this ref bool toggleValue, string label)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(5f);
+
+            toggleValue = GUILayout.Toggle(toggleValue, "", GUILayout.Width(15));
+            GUILayout.Label(label, WindowSupports.GetStyle(TextAnchor.MiddleLeft, FontStyle.Italic));
+
+            GUILayout.Space(5f);
+            GUILayout.EndHorizontal();
+        }
     }
 }

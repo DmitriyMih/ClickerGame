@@ -36,6 +36,9 @@ namespace GoogleSheetLoaderSystem
         private bool isShowSheetItems = false;
         private bool isShowObjectsData = false;
 
+        private bool isShowLoadProcessLog = false;
+        private bool isShowParsingProppertiesProcessLog = false;
+
         private Object targetObject;
 
         ConstructorsStruct constructorsParsePropperties = new();
@@ -74,7 +77,7 @@ namespace GoogleSheetLoaderSystem
         private void LoadCallback(string callback)
         {
             callbackText = callback;
-            Debug.Log($"Load Callback {callback}");
+            SupportLog.Log($"Load Callback {callback}", isShowLoadProcessLog);
         }
 
         private void OnGUI()
@@ -94,9 +97,10 @@ namespace GoogleSheetLoaderSystem
 
         #region Main Display/Settings Block
 
+
         private void DrawSettingsBlock()
         {
-            GUILayout.BeginVertical("HelpBox");
+            GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.Space(5);
 
             if (GUILayout.Button("Reconect To Loader"))
@@ -106,7 +110,7 @@ namespace GoogleSheetLoaderSystem
 
             WindowSupports.SetColorState(true);
 
-            isShowSettings = GUILayout.Toggle(isShowSettings, "Show Settings");
+            isShowSettings.DrawToggle("Show Settings");
 
             WindowSupports.SetColorState(false);
 
@@ -118,8 +122,40 @@ namespace GoogleSheetLoaderSystem
             }
 
             GUILayout.Space(5);
+
+            WindowSupports.SetColorState(true);
+
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.Space(2.5f);
+
+
+            GUILayout.Label($"Settings", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 14));
+
+            GUILayout.Space(2.5f);
+
+            isShowLoadProcessLog.DrawToggle("Show Load Process Log");
+            isShowParsingProppertiesProcessLog.DrawToggle("Show Parsing Propperties Process Log");
+
+            //showLoadLog = GUILayout.Toggle(showLoadLog, "Show Load Log");
+            //showLoadLog = GUILayout.Toggle(showLoadLog, "Show Load Log");
+            //showLoadLog = GUILayout.Toggle(showLoadLog, "Show Load Log");
+
+            GUILayout.Space(2.5f);
+            GUILayout.EndVertical();
+
+            WindowSupports.SetColorState(false);
+
+            //  log в консоль output
+            //  log в консоль parser
+            //  log в консоль converter
+            //  log в консоль
+
+            //  кнопка фулл рестарт
+
+            GUILayout.Space(5);
             GUILayout.EndVertical();
         }
+
 
         #endregion
 
@@ -169,7 +205,7 @@ namespace GoogleSheetLoaderSystem
         {
             WindowSupports.SetColorState(true);
 
-            isShowSheetOutput = GUILayout.Toggle(isShowSheetOutput, "Show Sheet Output");
+            isShowSheetOutput.DrawToggle("Show Sheet Output");
 
             if (!isShowSheetOutput)
             {
@@ -203,7 +239,7 @@ namespace GoogleSheetLoaderSystem
             GUILayout.BeginHorizontal();
 
             if (GUILayout.Button("Get Parsing Propperties") && targetObject != null)
-                targetObject.GetParsingPropperties(out constructorsParsePropperties, out fieldsParsePropperties, true);
+                targetObject.GetParsingPropperties(out constructorsParsePropperties, out fieldsParsePropperties, isShowParsingProppertiesProcessLog);
 
             Object tempObject = EditorGUILayout.ObjectField(targetObject, typeof(ScriptableObject));
 
@@ -247,7 +283,7 @@ namespace GoogleSheetLoaderSystem
 
             GUILayout.Space(5);
 
-            isParsingProppetiesOutput = GUILayout.Toggle(isParsingProppetiesOutput, "Show Parsing Propperties Output");
+            isParsingProppetiesOutput.DrawToggle("Show Parsing Propperties Output");
 
             if (!isParsingProppetiesOutput)
             {
@@ -426,7 +462,7 @@ namespace GoogleSheetLoaderSystem
 
             GUILayout.Space(5);
 
-            isShowSheetItems = GUILayout.Toggle(isShowSheetItems, "Show Sheet Parsing Items");
+            isShowSheetItems.DrawToggle("Show Sheet Parsing Items");
 
             if (!isShowSheetItems)
             {
@@ -512,7 +548,7 @@ namespace GoogleSheetLoaderSystem
 
             WindowSupports.SetColorState(true);
 
-            isShowObjectsData = GUILayout.Toggle(isShowObjectsData, "Show Data Items");
+            isShowObjectsData.DrawToggle("Show Data Items");
 
             WindowSupports.SetColorState(false);
 

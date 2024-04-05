@@ -143,12 +143,12 @@ namespace GoogleSheetLoaderSystem
             bool hasFields = targetClass.TryGetFields(out List<FieldsStruct> fieldsStorages, showOutput);
 
             if (hasConstructors)
-                hasConstructors = TryGetTargetConstructor(constructorsStorages, out constructorParsePropperties);
+                hasConstructors = TryGetTargetConstructor(constructorsStorages, out constructorParsePropperties, showOutput);
 
             if (!hasConstructors)
                 Debug.Log($"Not has Constructors Propperties");
             else
-                ConverterLog.OutputConstructorStruct(constructorParsePropperties, showOutput);
+                SupportLog.OutputConstructorStruct(constructorParsePropperties, showOutput);
 
             if (!hasFields)
                 Debug.Log($"Not Has Fields Propperties");
@@ -161,12 +161,12 @@ namespace GoogleSheetLoaderSystem
             return (hasConstructors, hasFields);
         }
 
-        private static bool TryGetConstructors(this Object targetClass, out List<ConstructorStruct> markersStorages, bool isShowProcess = false)
+        private static bool TryGetConstructors(this Object targetClass, out List<ConstructorStruct> markersStorages, bool isShowProcess)
         {
             ConstructorInfo[] ctors = targetClass.GetType().GetConstructors();
             bool result = ConverterSupports.TryGetCustomAttributes(ctors, out markersStorages);
 
-            ConverterLog.OutputConstructorsStruct(markersStorages, isShowProcess);
+            SupportLog.OutputConstructorsStruct(markersStorages, isShowProcess);
 
             return result;
         }
@@ -178,7 +178,7 @@ namespace GoogleSheetLoaderSystem
 
             FieldInfo[] fields = targetClass.GetType().GetFields(flags);
 
-            ConverterLog.Log($"Fields: {fields.Length}", isShowProcess);
+            SupportLog.Log($"Fields: {fields.Length}", isShowProcess);
 
             if (!ConverterSupports.TryGetCustomAttributes(fields, out markersStorages))
                 return false;
@@ -186,17 +186,17 @@ namespace GoogleSheetLoaderSystem
             for (int m = 0; m < markersStorages.Count; m++)
                 markersStorages[m].MarkerAttribute.Initialization(markersStorages[m].MemberInfo, markersStorages[m].MemberInfo.GetValue(targetClass).GetType());
 
-            ConverterLog.OutputMarkersStruct(markersStorages, "Do: Field", "Attribute", isShowProcess);
+            SupportLog.OutputMarkersStruct(markersStorages, "Do: Field", "Attribute", isShowProcess);
 
             if (isSort)
                 markersStorages.Sort((item1, item2) => item1.MarkerAttribute.Column.CompareTo(item2.MarkerAttribute.Column));
 
-            ConverterLog.OutputMarkersStruct(markersStorages, "To -> Field", "Attribute", isShowProcess);
+            SupportLog.OutputMarkersStruct(markersStorages, "To -> Field", "Attribute", isShowProcess);
 
             return markersStorages.Count > 0;
         }
 
-        private static bool TryGetTargetConstructor(this List<ConstructorStruct> markersStorages, out ConstructorStruct targetConstructor)
+        private static bool TryGetTargetConstructor(this List<ConstructorStruct> markersStorages, out ConstructorStruct targetConstructor, bool isShowProcess)
         {
             targetConstructor = new();
             if (markersStorages.Count == 0)
@@ -205,16 +205,16 @@ namespace GoogleSheetLoaderSystem
                 return false;
             }
 
-            ConverterLog.OutputConstructorsStruct(markersStorages, true);
+            SupportLog.OutputConstructorsStruct(markersStorages, isShowProcess);
 
             markersStorages.Sort((item1, item2) => item2.MarkerAttribute.Columns.Length.CompareTo(item1.MarkerAttribute.Columns.Length));
 
-            ConverterLog.OutputConstructorsStruct(markersStorages, true);
+            SupportLog.OutputConstructorsStruct(markersStorages, isShowProcess);
 
             targetConstructor = markersStorages[0];
 
             ParameterInfo[] parameters = targetConstructor.MemberInfo.GetParameters();
-            targetConstructor.MarkerAttribute.Initialization(targetConstructor.MemberInfo, parameters);
+            targetConstructor.MarkerAttribute.Initialization(targetConstructor.MemberInfo, parameters, isShowProcess);
 
             return targetConstructor.MarkerAttribute != null;
         }
@@ -344,7 +344,7 @@ namespace GoogleSheetLoaderSystem
         #endregion
     }
 
-    public static class ConverterLog
+    public static class SupportLog
     {
         #region Output Metods
 
@@ -354,46 +354,49 @@ namespace GoogleSheetLoaderSystem
                 Debug.Log(message);
         }
 
-        public static void OutputMemberDictionary<TAttribute, TMember>(Dictionary<TMember, TAttribute> pairs, string keyTitle, string valueTitle, bool isShow = false)
+        public static void OutputMemberDictionary<TAttribute, TMember>(Dictionary<TMember, TAttribute> pairs, string keyTitle, string valueTitle, bool isShow)
                 where TAttribute : Attribute
                 where TMember : MemberInfo
         {
             for (int i = 0; i < pairs.Count; i++)
-                ConverterLog.Log($"{i} | {keyTitle}: {pairs.ElementAt(i).Key} / {valueTitle}: {pairs.ElementAt(i).Value}", isShow);
+                SupportLog.Log($"{i} | {keyTitle}: {pairs.ElementAt(i).Key} / {valueTitle}: {pairs.ElementAt(i).Value}", isShow);
         }
 
-        public static void OutputDictionary<TKey, TValue>(Dictionary<TValue, TKey> pairs, string keyTitle, string valueTitle, bool isShow = false)
+        public static void OutputDictionary<TKey, TValue>(Dictionary<TValue, TKey> pairs, string keyTitle, string valueTitle, bool isShow)
         {
             for (int i = 0; i < pairs.Count; i++)
-                ConverterLog.Log($"{i} | {keyTitle}: {pairs.ElementAt(i).Key} / {valueTitle}: {pairs.ElementAt(i).Value}", isShow);
+                SupportLog.Log($"{i} | {keyTitle}: {pairs.ElementAt(i).Key} / {valueTitle}: {pairs.ElementAt(i).Value}", isShow);
         }
 
-        public static void OutputMarkersStruct<TAttribute, TMember>(List<MarkersStorage<TAttribute, TMember>> markers, string memberTitle, string ttributeTitle, bool isShow = false)
+        public static void OutputMarkersStruct<TAttribute, TMember>(List<MarkersStorage<TAttribute, TMember>> markers, string memberTitle, string ttributeTitle, bool isShow)
             where TAttribute : LoadMarkerAttribute
             where TMember : MemberInfo
         {
             for (int i = 0; i < markers.Count; i++)
-                ConverterLog.Log($"{markers[i].MarkerAttribute.Column} | {memberTitle}: {markers[i].MemberInfo} / {ttributeTitle}: {markers[i].MarkerAttribute}", isShow);
+                SupportLog.Log($"{markers[i].MarkerAttribute.Column} | {memberTitle}: {markers[i].MemberInfo} / {ttributeTitle}: {markers[i].MarkerAttribute}", isShow);
         }
 
-        public static void OutputConstructorStruct(ConstructorStruct marker, bool isShow = false)
+        public static void OutputConstructorStruct(ConstructorStruct marker, bool isShow)
         {
-            ConverterLog.Log($"Constructor: {marker.MemberInfo} / {marker.MarkerAttribute.Columns}", isShow);
+            SupportLog.Log($"Constructor: {marker.MemberInfo} / {marker.MarkerAttribute.Columns}", isShow);
             ParameterInfo[] parameters = marker.MemberInfo.GetParameters();
 
             for (int p = 0; p < parameters.Length; p++)
-                ConverterLog.Log($"Param {parameters[p].Position} is named {parameters[p].Name} and is of type {parameters[p].ParameterType}", isShow);
+                SupportLog.Log($"Param {parameters[p].Position} is named {parameters[p].Name} and is of type {parameters[p].ParameterType}", isShow);
         }
 
-        public static void OutputConstructorsStruct(List<ConstructorStruct> markers, bool isShow = false)
+        public static void OutputConstructorsStruct(List<ConstructorStruct> markers, bool isShow)
         {
+            if (!isShow)
+                return;
+
             for (int m = 0; m < markers.Count; m++)
             {
-                ConverterLog.Log($"Constructor: {markers[m].MemberInfo} / {markers[m].MarkerAttribute.Columns}", isShow);
+                SupportLog.Log($"Constructor: {markers[m].MemberInfo} / {markers[m].MarkerAttribute.Columns}");
                 ParameterInfo[] parameters = markers[m].MemberInfo.GetParameters();
 
                 for (int p = 0; p < parameters.Length; p++)
-                    ConverterLog.Log($"Param {parameters[p].Position} is named {parameters[p].Name} and is of type {parameters[p].ParameterType}", isShow);
+                    SupportLog.Log($"Param {parameters[p].Position} is named {parameters[p].Name} and is of type {parameters[p].ParameterType}");
             }
         }
 
