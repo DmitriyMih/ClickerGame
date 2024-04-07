@@ -34,7 +34,7 @@ namespace GoogleSheetLoaderSystem
 
         private bool isShowSettings = false;
 
-        private bool isShowSheetOutput = false;
+        private bool isShowSheetOutput = true;
         private bool isParsingProppetiesOutput = false;
         private bool isShowSheetItems = false;
         private bool isShowObjectsData = false;

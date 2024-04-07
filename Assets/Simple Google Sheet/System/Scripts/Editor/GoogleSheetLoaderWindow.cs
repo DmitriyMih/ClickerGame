@@ -14,10 +14,12 @@ namespace GoogleSheetLoaderSystem
         Texture2D IconTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         Texture2D LogoTexture => AssetDatabase.LoadAssetAtPath<Texture2D>(headerPath);
 
+        private bool isUrlLoad = true;
         string sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDazInDHxGwQOGH0udx0Z_N8i9NID-oEo50eRnK6aVY7cGsHY2bxMwHd5tchnq1jO9I8OgqsKmSLt3/pub?gid=0&single=true&output=csv";
-        static bool inProgress;
-
+        static bool isProgress;
         private Vector2 urlSrollRect = Vector2.zero;
+
+        private TextAsset textAsset;
 
         public static event Action<string> LoadCallback;
 
@@ -30,7 +32,7 @@ namespace GoogleSheetLoaderSystem
             window.maxSize = new Vector2(400f, 250f);
             window.minSize = window.maxSize;
 
-            inProgress = false;
+            isProgress = false;
         }
 
         private void OnGUI()
@@ -38,42 +40,75 @@ namespace GoogleSheetLoaderSystem
             WindowSupports.DrawLogo(LogoTexture, IconTexture);
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.Space(2.5f);
+
+            DrawToggleLoadType();
+
+            GUILayout.Space(2.5f);
+
+            if (isUrlLoad)
+                DrawGoogleSheetLoaderBlock();
+            else
+                DrawTextAssetBlock();
+
+            GUILayout.Space(2.5f);
+            GUILayout.EndVertical();
+
+            DrawProgressBlock();
+        }
+
+        private void DrawToggleLoadType()
+        {
+            if (isProgress)
+                return;
+
+            string label = isUrlLoad ? "Offline Load" : "Load By URL";
+
+            if (GUILayout.Button($"Change To: {label}"))
+                isUrlLoad = !isUrlLoad;
+        }
+
+        private void DrawGoogleSheetLoaderBlock()
+        {
+            DrawSheetUrl();
 
             GUILayout.Space(5);
 
-            DrawSheetUrl();
+            if (!isProgress && GUILayout.Button("Load Sheet"))
+                Load(sheetURL);
+
+            if (isProgress && GUILayout.Button("Stop Loading"))
+                isProgress = false;
+        }
+
+        private void DrawTextAssetBlock()
+        {
+            textAsset = EditorGUILayout.ObjectField(textAsset, typeof(TextAsset)) as TextAsset;
+
+            if (GUILayout.Button("Extract Text") && textAsset!=null)
+                LoadCallback?.Invoke(textAsset.text);
+        }
+
+        private void DrawProgressBlock()
+        {
+            if (!isProgress)
+                return;
 
             GUILayout.Space(10);
 
-            if (!inProgress && GUILayout.Button("Load Sheet"))
-                Load(sheetURL);
+            GUILayout.BeginVertical("HelpBox");
+            GUILayout.Space(5);
 
-            if (inProgress && GUILayout.Button("Stop Loading"))
-            {
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.black;
 
-            }
+            GUILayout.Label("Load In Progress", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 12));
+
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.white;
 
             GUILayout.Space(5);
             GUILayout.EndVertical();
-
-            if (inProgress)
-            {
-                GUILayout.Space(10);
-
-                GUILayout.BeginVertical("HelpBox");
-                GUILayout.Space(5);
-
-                GUI.backgroundColor = Color.white;
-                GUI.contentColor = Color.black;
-
-                GUILayout.Label("Load In Progress", WindowSupports.GetStyle(TextAnchor.MiddleCenter, FontStyle.Bold, 12));
-
-                GUI.backgroundColor = Color.white;
-                GUI.contentColor = Color.white;
-
-                GUILayout.Space(5);
-                GUILayout.EndVertical();
-            }
         }
 
         private void DrawSheetUrl()
@@ -101,12 +136,12 @@ namespace GoogleSheetLoaderSystem
 
         private static async void Load(string url)
         {
-            inProgress = true;
+            isProgress = true;
 
             using var www = UnityWebRequest.Get(url);
             var operation = www.SendWebRequest();
 
-            while (!operation.isDone)
+            while (!operation.isDone || !isProgress)
                 await Task.Yield();
 
             if (www.result == UnityWebRequest.Result.Success)
@@ -117,7 +152,7 @@ namespace GoogleSheetLoaderSystem
             else
                 Debug.LogError($"Failed: {www.error}");
 
-            inProgress = false;
+            isProgress = false;
         }
     }
 }
