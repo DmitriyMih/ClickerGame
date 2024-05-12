@@ -96,7 +96,7 @@ namespace GoogleSheetLoaderSystem
 
             GUILayout.Space(10);
 
-            GUILayout.BeginVertical("HelpBox");
+            GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.Space(5);
 
             GUI.backgroundColor = Color.white;
